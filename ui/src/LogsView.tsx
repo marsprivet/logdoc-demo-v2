@@ -398,16 +398,22 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
         <Button className="tail" onClick={() => setShowView((v) => !v)} title="view settings">
           ⚙ View
         </Button>
-        {entries.length > 0 && (
-          <>
-            <Button className="tail" onClick={() => exportAs("csv")}>
-              ⇩ CSV
-            </Button>
-            <Button className="tail" onClick={() => exportAs("ndjson")}>
-              ⇩ NDJSON
-            </Button>
-          </>
-        )}
+        <Button
+          className="tail"
+          disabled={entries.length === 0}
+          style={entries.length === 0 ? { visibility: "hidden" } : undefined}
+          onClick={() => exportAs("csv")}
+        >
+          ⇩ CSV
+        </Button>
+        <Button
+          className="tail"
+          disabled={entries.length === 0}
+          style={entries.length === 0 ? { visibility: "hidden" } : undefined}
+          onClick={() => exportAs("ndjson")}
+        >
+          ⇩ NDJSON
+        </Button>
       </div>
 
       <div className="levels">
