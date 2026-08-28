@@ -1,0 +1,149 @@
+# Example LogDoc v2 configuration.
+# Precedence: defaults → this file (-config / LOGDOC_CONFIG) → env LOGDOC_* → flags.
+
+http:
+  addr: ":9001"
+
+ingest:
+  api_key: ""          # bootstrap admin API key; empty + no users = open dev mode
+  native:
+    tcp_addr: ":9999"
+    udp_addr: ":9999"
+  otlp:
+    grpc_addr: ":4317"   # OTLP/gRPC logs; empty = disabled
+  syslog:
+    tcp_addr: ""         # e.g. ":5140"; RFC 3164 + RFC 5424 auto-detected,
+    udp_addr: ""         # newline and octet-counting (RFC 6587) TCP framing
+  journald:
+    udp_addr: ""         # e.g. ":5514"; systemd journal export format:
+                         #   journalctl -o export -f | socat - udp-sendto:logdoc:5514
+  python:
+    tcp_addr: ""         # e.g. ":9020"; Python logging SocketHandler (pickled
+    udp_addr: ""         # LogRecord) / DatagramHandler — point the stdlib
+                         # handlers straight at LogDoc, no formatter needed
+
+clickhouse:
+  addr: "localhost:9010"   # port from deploy/docker-compose.dev.yml
+  database: "logdoc"
+  username: "default"
+  password: ""
+  batch_size: 10000
+  flush_interval: 1s
+
+graph:
+  db_path: "logdoc-graph.db"   # SQLite file with the architecture graph state
+
+# Users and roles. With no users and an empty ingest.api_key everything is
+# open (dev mode). Creating the first user — or setting the API key — turns
+# auth on for every surface (HTTP API, UI, OTLP). The API key always maps to
+# an admin identity and doubles as the recovery path. Users sign in with
+# login+password (JWT session) and can issue personal `ldt_...` tokens from
+# the Access tab; roles: member = search/tail/topology, admin = + rules and
+# user management. Manage via the UI or /api/v1/users.
+auth:
+  db_path: "logdoc-users.db"   # SQLite file with users, tokens, JWT secret
+  session_ttl: 24h             # login session lifetime
+
+# Plugin SDK v2: external plugins as gRPC subprocesses. Each entry is an
+# executable the core launches and supervises (a crashed plugin is restarted
+# with backoff). Kinds: `source` — receives data by its own means and streams
+# entries into the core; `pipe` — becomes a notification channel under `name`
+# (usable in rule `channels`). The `config` map is passed to the plugin
+# verbatim. Contract: pkg/sdk/proto/plugin.proto; Go helpers: pkg/sdk;
+# reference implementation: plugins/syslog-source (make plugins).
+plugins: []
+# plugins:
+#   - name: syslog-plugin
+#     kind: source
+#     exec: ./bin/plugins/syslog-source
+#     config: {udp_addr: ":6514"}
+#   - name: jira-escalation
+#     kind: pipe
+#     exec: /opt/logdoc/plugins/jira
+#     config: {url: "https://jira.example.com", project: OPS}
+
+# Server-side pipelines: parse raw messages into structured fields on ingest,
+# before storage, tail, topology and notifications see the entry. Empty list =
+# off. Each pipeline: an optional `when` selector (app / src / msg_regex, all
+# set fields must match) and ordered `steps`, each exactly one of:
+#   grok:     '%{PATTERN:field} ...'  — grok patterns → fields (COMBINEDAPACHELOG,
+#             IPORHOST, TIMESTAMP_ISO8601, LOGLEVEL, NUMBER, ...); no match = no-op
+#   regex:    RE2 with (?P<name>...) named groups → fields
+#   json:     {} — parse a JSON message into fields (nested keys dot-flattened);
+#             top-level "message"/"msg" replaces the message, "level" sets the level
+#   severity: derive the entry level from a field (first matching rule wins;
+#             without rules the value is parsed as a level name: info/warning/fatal/...)
+#   set:      rewrite app/src/pid/msg/lvl or add fields; "$name" reads a field
+#   drop:     true — discard the entry
+pipelines: []
+# pipelines:
+#   - name: nginx access
+#     when: {app: nginx}
+#     steps:
+#       - grok: '%{COMBINEDAPACHELOG} upstream=%{WORD:upstream}'
+#       - severity:
+#           from: response
+#           rules:
+#             - {prefix: "5", lvl: ERROR}
+#             - {prefix: "4", lvl: WARN}
+#             - {lvl: INFO}            # catch-all
+#       - set:
+#           src: access
+#           fields: {peer.service: $upstream}   # puts nginx→upstream on the map
+#   - name: json services
+#     when: {src: docker}
+#     steps: [{json: {}}]
+#   - name: drop health checks
+#     when: {msg_regex: 'GET /(healthz|ping) '}
+#     steps: [{drop: true}]
+
+# Built-in notifications: rules over the live stream, fanned out to channels.
+# No rules and no channels = the whole block is off. With at least one channel
+# configured, rules can also be created at runtime from the UI (Rules tab) or
+# via POST /api/v1/notify/rules; those persist in `rules_path`. A rule with no
+# `channels` uses every configured channel.
+notify:
+  rules: []
+  rules_path: "logdoc-rules.json"  # where UI-created rules are stored
+  # rules:
+  #   - name: billing error burst
+  #     type: error_threshold      # N entries with lvl >= ERROR in the window
+  #     app: billing               # optional: limit to one application
+  #     threshold: 10              # default 10
+  #     window: 1m                 # default 1m
+  #     cooldown: 5m               # min pause between alerts, default 5m
+  #     max_fires: 3               # optional: retire after N alerts (0 = fire once)
+  #     channels: [telegram, webhook]
+  #   - name: web went silent
+  #     type: silence              # the app logged before, then stopped
+  #     app: web                   # required for silence rules
+  #     window: 5m                 # default 5m
+  #   - name: billing cascade      # a composite condition instead of "lvl >= ERROR":
+  #     type: error_threshold      # count entries matching `match` in the window
+  #     threshold: 2
+  #     window: 1m
+  #     match:                     # one node = AND of its fields; nest and:/or: freely
+  #       app: billing             # exact app (also: src, pid)
+  #       or:
+  #         - lvl: ERROR           # minimum level
+  #         - msg: {contains: "pool exhausted"}   # also: starts/ends/equals,
+  #                                               # case_sensitive: true
+  #         - regex: "timeout after \\d+ms"       # RE2 over msg
+  #         - fields: {peer: {equals: db}}        # ops on parsed key=value fields
+  # telegram:
+  #   token: "123456:ABC..."      # or env LOGDOC_TELEGRAM_TOKEN
+  #   chat_ids: [123456789]
+  # webhook:
+  #   url: "https://example.com/hook"   # or env LOGDOC_WEBHOOK_URL; POST, JSON event
+  # email:
+  #   smtp_addr: "smtp.example.com:587"
+  #   from: "logdoc@example.com"
+  #   to: ["oncall@example.com"]
+  #   username: "logdoc@example.com"
+  #   password: ""                # or env LOGDOC_SMTP_PASSWORD
+  # kafka:
+  #   brokers: ["localhost:9092"]
+  #   topic: "logdoc-alerts"      # JSON: {rule, type, message, entries[], server_time}
+
+log:
+  level: "info"

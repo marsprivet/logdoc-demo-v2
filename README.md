@@ -1,0 +1,245 @@
+# LogDoc v2
+
+Structured-log-first platform: a single Go binary on top of ClickHouse.
+Pipeline: **gather → pipe → sink → view → understand**.
+
+![Live architecture map built from logs](docs/img/topology.png)
+
+What makes it different:
+
+- **Architecture map from logs alone** — services and their dependencies
+  appear on a live map without agents or mandatory tracing;
+- **MCP built in** — AI agents investigate your system through the same
+  interface you use;
+- **v1 protocol compatible** — existing LogDoc appenders keep working.
+
+New here? Start with [docs/getting-started.md](docs/getting-started.md).
+Coming from LogDoc v1? See [docs/migration-v1.md](docs/migration-v1.md).
+
+## Quick start
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d --build
+```
+
+UI: http://localhost:9001 · Health: `GET /healthz`
+
+First log:
+
+```bash
+curl -X POST localhost:9001/api/v1/ingest \
+  -d '[{"msg":"hello logdoc","app":"demo","lvl":"INFO","fields":{"env":"dev"}}]'
+```
+
+Search:
+
+```bash
+curl 'localhost:9001/api/v1/query?app=demo&lvl=INFO&q=hello'
+```
+
+Live tail: WebSocket `GET /api/v1/tail` (same filter parameters).
+
+v1 compatibility: TCP/UDP `:9999` accepts the `ld_format` protocol —
+existing `logdoc-go-appender` and `logback-appenders` work unchanged.
+
+OTLP: gRPC logs on `:4317` — point any OpenTelemetry SDK or Collector at it
+(`service.name`→app, body→msg, severity→lvl, attributes→fields).
+
+Syslog: RFC 3164 and RFC 5424 with auto-detection, TCP (newline or
+octet-counting framing) and UDP. Off by default — enable with
+`LOGDOC_SYSLOG_UDP_ADDR=:5140` / `LOGDOC_SYSLOG_TCP_ADDR=:5140` (or the
+`ingest.syslog` section of the config) and point rsyslog, a router or a NAS
+at it.
+
+Journald: the systemd journal export format over UDP
+(`LOGDOC_JOURNALD_UDP_ADDR=:5514`), including binary fields:
+
+```bash
+journalctl -o export -f | socat - udp-sendto:logdoc-host:5514
+```
+
+Python: the stdlib logging handlers speak to LogDoc directly
+(`LOGDOC_PYTHON_TCP_ADDR=:9020`) — no library, no formatter:
+
+```python
+import logging, logging.handlers
+logging.getLogger().addHandler(logging.handlers.SocketHandler("logdoc-host", 9020))
+```
+
+## Architecture map
+
+LogDoc builds a live service map from the logs themselves: shared
+`trace_id`/`correlation_id` values and peer fields (`peer.service`, `target`,
+`upstream`) turn into directed edges between services. No agents, no tracing
+required — traces only refine the map.
+
+- UI: the **Topology** tab — force-directed map, click a service or an edge
+  to see its details and jump to its logs.
+- API: `GET /api/v1/topology?window=5m` — nodes and edges with windowed
+  rates (rps, error rate).
+- Export: `GET /api/v1/topology/export?format=mermaid|markdown` — paste the
+  current architecture straight into your docs.
+- Deploy markers: version changes detected from the logs themselves (a
+  `version` field, or a deploy message) land on the service card next to
+  whatever happened right after — "2.3.1 deployed, seconds later the first
+  errors". API: `GET /api/v1/deploys?app=billing&window=24h`.
+- What changed: `GET /api/v1/topology/diff?window=1h` — new and silent
+  services and links, error-rate jumps versus the previous window, and
+  deploys, in one report. In the UI: the **Changes** toggle on the map.
+
+## MCP: the agent interface
+
+LogDoc is an MCP server: any agent (Claude Code, or anything speaking MCP
+over Streamable HTTP) can investigate your system through four tools —
+`query_logs`, `get_topology`, `get_topology_diff`, `get_service_card`.
+
+```bash
+claude mcp add --transport http logdoc http://localhost:9001/mcp \
+  --header "X-API-Key: <your key>"
+```
+
+Then ask the agent things like *"why is checkout failing?"* — it walks the
+map, follows the error edges and reads the logs itself. Try it on the demo
+incident: `deploy/demo-incident.sh` injects a database failure cascading
+through three services.
+
+![An agent root-causing the demo incident through MCP, unattended](docs/img/agent-demo.gif)
+
+Above (2× speed): a single prompt, no human input — the agent walks the
+topology, follows one `trace_id` across four services and lands on the root
+cause: a bad `billing` deploy exhausting the postgres connection pool.
+
+## Pipelines: structure on ingest
+
+Server-side pipelines parse raw messages into structured fields the moment
+they arrive — before storage, search, live tail, the topology extractor and
+alert rules see the entry. A raw nginx access line becomes queryable fields,
+gets its real severity, and puts the upstream service on the map:
+
+```yaml
+pipelines:
+  - name: nginx access
+    when: { app: nginx }
+    steps:
+      - grok: '%{COMBINEDAPACHELOG} upstream=%{WORD:upstream}'
+      - severity:
+          from: response
+          rules:
+            - { prefix: "5", lvl: ERROR }
+            - { prefix: "4", lvl: WARN }
+            - { lvl: INFO }
+      - set:
+          fields: { peer.service: $upstream }   # nginx→upstream edge on the map
+  - name: drop health checks
+    when: { msg_regex: 'GET /healthz ' }
+    steps: [{ drop: true }]
+```
+
+Steps: `grok` (built-in pattern library, no external dependency), `regex`
+(RE2 named groups), `json` (JSON messages → dot-flattened fields, honoring
+`message`/`level` keys), `severity` (level from a field value or from level
+names like `warning`/`fatal`), `set` (rewrite `app`/`src`/`pid`/`msg`/`lvl`
+or add fields, `$name` references), `drop`. A `when` selector limits a
+pipeline by `app`, `src` or `msg_regex`. See `logdoc.example.yml`.
+
+## Notifications
+
+Built-in alert rules run over the live stream — no query polling:
+
+- **error_threshold** — N entries with level ≥ ERROR within a sliding window;
+- **silence** — a service that used to log stopped logging.
+
+An `error_threshold` rule can carry a composite `match` condition instead of
+the default "level ≥ ERROR": nested `and`/`or`, exact `app`/`src`/`pid`,
+minimum `lvl`, string ops on the message (`contains`/`starts`/`ends`/`equals`,
+case-insensitive by default), an RE2 `regex`, and the same ops on parsed
+`key=value` fields. `max_fires` retires a rule after N alerts (`0` = fire
+once). Alerts include the matched log entries.
+
+Events go to Telegram, a webhook (JSON POST — the integration point for
+everything else), email and/or a Kafka topic. Configure in `logdoc.yml`:
+
+```yaml
+notify:
+  rules:
+    - name: web went silent
+      type: silence
+      app: web
+      window: 5m
+    - name: billing cascade
+      type: error_threshold
+      threshold: 2
+      window: 1m
+      match:
+        app: billing
+        or:
+          - lvl: ERROR
+          - msg: { contains: "pool exhausted" }
+  telegram: { token: "...", chat_ids: [123456789] }
+  webhook:  { url: "https://example.com/hook" }
+  kafka:    { brokers: ["localhost:9092"], topic: "logdoc-alerts" }
+```
+
+Rules also live in the UI: the **Rules** tab lists every rule with live fire
+counters and lets you create, edit and delete rules at runtime (persisted
+server-side; config-file rules are read-only there). The same works over
+`GET`/`POST`/`DELETE /api/v1/notify/rules`.
+
+See `logdoc.example.yml` for every option.
+
+## Users and roles
+
+With no users and no API key everything is open — good for a laptop. For a
+team, set `ingest.api_key` (the bootstrap admin credential), sign in with it
+and create accounts on the **Access** tab (or `POST /api/v1/users`):
+
+- **member** — search, tail, topology, export;
+- **admin** — everything, plus notification rules and user management.
+
+Users sign in with login+password (JWT session) and issue personal `ldt_...`
+tokens for scripts and CI — revocable per token, carrying the user's role.
+Every credential is sent the same way: `X-API-Key`, `Authorization: Bearer`,
+or `?api_key=`. Creating the first user turns auth on everywhere, including
+OTLP ingest; the API key remains the recovery path.
+
+## Plugin SDK
+
+External plugins are standalone executables the core launches and supervises
+over gRPC — a crashed plugin is restarted with backoff, and a plugin can be
+written in any language that speaks gRPC. Two kinds:
+
+- **source** — receives data by its own means (a socket, a queue, an API)
+  and streams entries into the core;
+- **pipe** — becomes a notification channel, usable in alert rule `channels`
+  next to telegram/webhook/email/kafka.
+
+```yaml
+plugins:
+  - name: syslog-plugin
+    kind: source
+    exec: ./bin/plugins/syslog-source
+    config: {udp_addr: ":6514"}
+```
+
+The contract is one proto file — `pkg/sdk/proto/plugin.proto`; Go plugins
+use the `pkg/sdk` helpers (`sdk.ServeSource` / `sdk.ServePipe`) and are a
+single small `main.go`. Reference implementation:
+[`plugins/syslog-source`](plugins/syslog-source/main.go), built with
+`make plugins`.
+
+## Development
+
+```bash
+make up      # ClickHouse for development (ports 8124/9010)
+make ui      # build the frontend (ui/dist, goes into go:embed)
+make build   # bin/logdoc
+make test
+./bin/logdoc # config: flags / env LOGDOC_* / -config logdoc.yml (see logdoc.example.yml)
+```
+
+Auth: `LOGDOC_API_KEY` (`X-API-Key` header, `Authorization: Bearer`, or `?api_key=`).
+An empty key and no users means dev mode with no auth (see "Users and roles").
+
+## License
+
+Apache 2.0

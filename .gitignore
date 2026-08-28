@@ -1,0 +1,6 @@
+bin/
+*.log
+.DS_Store
+/logdoc.yml
+ui/node_modules/
+ui/tsconfig.tsbuildinfo
