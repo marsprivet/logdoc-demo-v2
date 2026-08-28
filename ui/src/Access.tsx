@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { Input } from "@base-ui/react/input";
+import { Button } from "@base-ui/react/button";
 import Select from "./ui/Select";
 
 // Access screen: personal API tokens of the signed-in user, plus user
@@ -94,12 +96,12 @@ function Tokens() {
         </div>
       )}
       <div className="filters">
-        <input
+        <Input
           placeholder="token name (e.g. ci, laptop)"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <button onClick={create}>Create token</button>
+        <Button onClick={create}>Create token</Button>
       </div>
       {tokens && tokens.length > 0 && (
         <table>
@@ -193,8 +195,8 @@ function Users() {
       </div>
       {error && <div className="error">{error}</div>}
       <div className="filters">
-        <input placeholder="login" value={login} onChange={(e) => setLogin(e.target.value)} />
-        <input
+        <Input placeholder="login" value={login} onChange={(e) => setLogin(e.target.value)} />
+        <Input
           placeholder="password (min 8; empty keeps current)"
           type="password"
           value={password}
@@ -209,9 +211,9 @@ function Users() {
             { value: "admin", label: "admin" },
           ]}
         />
-        <button onClick={save} disabled={!login.trim()}>
+        <Button onClick={save} disabled={!login.trim()}>
           Save user
-        </button>
+        </Button>
       </div>
       {users && users.length > 0 && (
         <table>

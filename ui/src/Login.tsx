@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Input } from "@base-ui/react/input";
+import { Button } from "@base-ui/react/button";
 
 // Login screen: a user session (login + password → JWT) or a raw API key /
 // personal token. Whatever succeeds lands in localStorage("logdoc_api_key")
@@ -43,34 +45,34 @@ export default function Login({ onDone }: { onDone: () => void }) {
     <div className="login">
       <form className="login-card" onSubmit={submitUser}>
         <div className="sect">// sign in</div>
-        <input
+        <Input
           placeholder="login"
           value={login}
           autoFocus
           autoComplete="username"
           onChange={(e) => setLogin(e.target.value)}
         />
-        <input
+        <Input
           placeholder="password"
           type="password"
           value={password}
           autoComplete="current-password"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit" disabled={!login || !password}>
+        <Button type="submit" disabled={!login || !password}>
           Sign in
-        </button>
+        </Button>
       </form>
       <form className="login-card" onSubmit={submitKey}>
         <div className="sect">// or use an API key / personal token</div>
-        <input
+        <Input
           placeholder="API key or ldt_… token"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
         />
-        <button type="submit" disabled={!apiKey}>
+        <Button type="submit" disabled={!apiKey}>
           Use key
-        </button>
+        </Button>
       </form>
       {error && <div className="error">{error}</div>}
     </div>

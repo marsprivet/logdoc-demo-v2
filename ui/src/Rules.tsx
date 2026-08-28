@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { Input } from "@base-ui/react/input";
+import { Button } from "@base-ui/react/button";
 import Select from "./ui/Select";
 
 // Notification rules screen: GET/POST/DELETE /api/v1/notify/rules.
@@ -230,7 +232,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
           // channels: {data.channels.join(", ")} · rules fire on the live stream
         </span>
         {!f && canEdit && (
-          <button
+          <Button
             onClick={() => {
               setForm({ ...emptyForm });
               setEditing(null);
@@ -238,7 +240,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
             }}
           >
             New rule
-          </button>
+          </Button>
         )}
       </div>
 
@@ -246,7 +248,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
         <div className="rules-form">
           <div className="sect">// {editing ? `edit rule: ${editing}` : "new rule"}</div>
           <div className="filters">
-            <input
+            <Input
               placeholder="name"
               value={f.name}
               disabled={editing !== null}
@@ -260,13 +262,13 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
                 { value: "silence", label: "silence" },
               ]}
             />
-            <input
+            <Input
               placeholder={f.type === "silence" ? "app (required)" : "app (optional)"}
               value={f.app}
               onChange={(e) => setForm({ ...f, app: e.target.value })}
             />
             {f.type === "error_threshold" && (
-              <input
+              <Input
                 type="number"
                 placeholder="threshold"
                 title="entries in the window before the rule fires (default 10)"
@@ -274,21 +276,21 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
                 onChange={(e) => setForm({ ...f, threshold: e.target.value })}
               />
             )}
-            <input
+            <Input
               className="short"
               placeholder="window"
               title="e.g. 1m, 90s (defaults: 1m / 5m for silence)"
               value={f.window}
               onChange={(e) => setForm({ ...f, window: e.target.value })}
             />
-            <input
+            <Input
               className="short"
               placeholder="cooldown"
               title="minimum pause between alerts (default 5m)"
               value={f.cooldown}
               onChange={(e) => setForm({ ...f, cooldown: e.target.value })}
             />
-            <input
+            <Input
               type="number"
               placeholder="max fires"
               title="retire the rule after N alerts; 0 = fire once; empty = unlimited"
@@ -316,8 +318,8 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
           )}
           {formError && <div className="error">{formError}</div>}
           <div className="rules-actions">
-            <button onClick={save}>{editing ? "Save" : "Create"}</button>
-            <button
+            <Button onClick={save}>{editing ? "Save" : "Create"}</Button>
+            <Button
               className="tail"
               onClick={() => {
                 setForm(null);
@@ -326,7 +328,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
               }}
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}

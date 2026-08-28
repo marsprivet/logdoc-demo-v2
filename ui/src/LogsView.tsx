@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import { Input } from "@base-ui/react/input";
+import { Button } from "@base-ui/react/button";
 
 type Entry = {
   ts: string;
@@ -377,33 +379,33 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
   return (
     <>
       <div className="filters">
-        <input
+        <Input
           placeholder="$ app, app2..."
           value={app}
           onChange={(e) => setApp(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && search()}
         />
-        <input
+        <Input
           placeholder="$ grep message..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && search()}
         />
-        <button onClick={() => search()}>Search</button>
-        <button className={tailing ? "tail on" : "tail"} onClick={tailing ? stopTail : () => startTail()}>
+        <Button onClick={() => search()}>Search</Button>
+        <Button className={tailing ? "tail on" : "tail"} onClick={tailing ? stopTail : () => startTail()}>
           {tailing ? "■ Stop" : "▶ Live tail"}
-        </button>
-        <button className="tail" onClick={() => setShowView((v) => !v)} title="view settings">
+        </Button>
+        <Button className="tail" onClick={() => setShowView((v) => !v)} title="view settings">
           ⚙ View
-        </button>
+        </Button>
         {entries.length > 0 && (
           <>
-            <button className="tail" onClick={() => exportAs("csv")}>
+            <Button className="tail" onClick={() => exportAs("csv")}>
               ⇩ CSV
-            </button>
-            <button className="tail" onClick={() => exportAs("ndjson")}>
+            </Button>
+            <Button className="tail" onClick={() => exportAs("ndjson")}>
               ⇩ NDJSON
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -411,27 +413,27 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
       <div className="levels">
         <span className="sect">{"// period"}</span>
         {PERIODS.map((p) => (
-          <button
+          <Button
             key={p.id}
             className={period === p.id ? "winbtn on" : "winbtn"}
             onClick={() => setPeriod(p.id)}
             disabled={tailing}
           >
             {p.label}
-          </button>
+          </Button>
         ))}
-        <button
+        <Button
           className={period === "custom" ? "winbtn on" : "winbtn"}
           onClick={() => setPeriod("custom")}
           disabled={tailing}
         >
           custom
-        </button>
+        </Button>
         {period === "custom" && (
           <span className="custom-range">
-            <input type="datetime-local" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+            <Input type="datetime-local" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
             <span className="muted">—</span>
-            <input type="datetime-local" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+            <Input type="datetime-local" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
           </span>
         )}
       </div>
@@ -452,9 +454,9 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
           {chips.map((c) => (
             <span key={chipLabel(c)} className="chip">
               {chipLabel(c)}
-              <button className="chip-x" onClick={() => removeChip(c)} title="remove filter">
+              <Button className="chip-x" onClick={() => removeChip(c)} title="remove filter">
                 ×
-              </button>
+              </Button>
             </span>
           ))}
         </div>
@@ -476,14 +478,14 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
               {label}
             </label>
           ))}
-          <button
+          <Button
             className={view.density === "compact" ? "winbtn on" : "winbtn"}
             onClick={() => setView((v) => ({ ...v, density: v.density === "compact" ? "full" : "compact" }))}
           >
             compact
-          </button>
+          </Button>
           <span className="sect">font</span>
-          <input
+          <Input
             type="range"
             min={10}
             max={18}
@@ -502,9 +504,9 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
       )}
       {tailing && <div className="muted stat">live: {entries.length} entries</div>}
       {newCount > 0 && (
-        <button className="newpill" onClick={() => { flushPaused(); window.scrollTo({ top: 0 }); }}>
+        <Button className="newpill" onClick={() => { flushPaused(); window.scrollTo({ top: 0 }); }}>
           ↑ {newCount} new entries
-        </button>
+        </Button>
       )}
 
       <table className={view.density === "compact" ? "compact" : undefined}>
@@ -558,10 +560,10 @@ function GroupRows({
   const { head, rest } = group;
   const badge =
     rest.length > 0 ? (
-      <button className="grp" onClick={toggle} title={open ? "collapse" : "expand"}>
+      <Button className="grp" onClick={toggle} title={open ? "collapse" : "expand"}>
         {open ? "− " : "+ "}
         {rest.length + 1}
-      </button>
+      </Button>
     ) : undefined;
   return (
     <>

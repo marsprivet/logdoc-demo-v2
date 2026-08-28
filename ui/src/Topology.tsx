@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@base-ui/react/button";
 
 // Architecture map: a force-directed canvas over GET /api/v1/topology.
 // The layout model follows the logdoc.org topology demo: soft repulsion,
@@ -582,17 +583,17 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
       <div className="topo-bar">
         <span className="sect">window</span>
         {WINDOWS.map((v) => (
-          <button key={v} className={v === win ? "winbtn on" : "winbtn"} onClick={() => setWin(v)}>
+          <Button key={v} className={v === win ? "winbtn on" : "winbtn"} onClick={() => setWin(v)}>
             {v}
-          </button>
+          </Button>
         ))}
         <span className="topo-sep">|</span>
-        <button
+        <Button
           className={showChanges ? "winbtn on" : "winbtn"}
           onClick={() => setShowChanges((v) => !v)}
         >
           Changes
-        </button>
+        </Button>
         <div className="topo-bar-right">
           <span className="sect">export</span>
           <a
@@ -780,8 +781,8 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
               </div>
             )}
             <div className="topo-actions">
-              <button onClick={() => onOpenLogs(selNode.app, false)}>Logs</button>
-              <button onClick={() => onOpenLogs(selNode.app, true)}>Live tail</button>
+              <Button onClick={() => onOpenLogs(selNode.app, false)}>Logs</Button>
+              <Button onClick={() => onOpenLogs(selNode.app, true)}>Live tail</Button>
             </div>
           </div>
         )}
@@ -814,10 +815,10 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
               <b>{new Date(selEdge.last_seen).toLocaleString()}</b>
             </div>
             <div className="topo-actions">
-              <button onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, false)}>Logs</button>
-              <button onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, true)}>
+              <Button onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, false)}>Logs</Button>
+              <Button onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, true)}>
                 Live tail
-              </button>
+              </Button>
             </div>
           </div>
         )}

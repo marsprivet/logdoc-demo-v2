@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@base-ui/react/button";
 import LogsView, { type LogsRequest } from "./LogsView";
 import Topology from "./Topology";
 import Rules from "./Rules";
@@ -58,25 +59,25 @@ export default function App() {
         <img src="/logo.svg" alt="LogDoc" className="logo" />
         {(me === "anon" || me.mode === "open") && <span className="app-version">v2</span>}
         <nav className="tabs">
-          <button className={view === "logs" ? "tab on" : "tab"} onClick={() => setView("logs")}>
+          <Button className={view === "logs" ? "tab on" : "tab"} onClick={() => setView("logs")}>
             Logs
-          </button>
-          <button
+          </Button>
+          <Button
             className={view === "topology" ? "tab on" : "tab"}
             onClick={() => setView("topology")}
           >
             Topology
-          </button>
-          <button className={view === "rules" ? "tab on" : "tab"} onClick={() => setView("rules")}>
+          </Button>
+          <Button className={view === "rules" ? "tab on" : "tab"} onClick={() => setView("rules")}>
             Rules
-          </button>
+          </Button>
           {me !== "anon" && me.mode !== "open" && (
-            <button
+            <Button
               className={view === "access" ? "tab on" : "tab"}
               onClick={() => setView("access")}
             >
               Access
-            </button>
+            </Button>
           )}
         </nav>
         {me !== "anon" && me.mode !== "open" && (
