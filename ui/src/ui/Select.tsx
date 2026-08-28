@@ -18,6 +18,7 @@ export default function Select({
       value={value}
       onValueChange={(v) => onValueChange(v as string)}
       disabled={disabled}
+      modal={false}
     >
       <BaseSelect.Trigger className="ui-select-trigger">
         <BaseSelect.Value />
