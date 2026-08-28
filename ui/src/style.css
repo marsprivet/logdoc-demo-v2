@@ -423,16 +423,6 @@ a.winbtn { text-decoration: none; }
   gap: 10px;
 }
 .rules-form .filters input.short { width: 110px; min-width: 0; }
-.rules-form select {
-  background: var(--input);
-  border: 1px solid var(--border-strong);
-  color: var(--text);
-  border-radius: 3px;
-  padding: 7px 12px;
-  font-family: var(--mono);
-  font-size: 12px;
-}
-.rules-form select:focus { outline: none; border-color: var(--text); }
 .rules-channels { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
 .rules-match {
   background: var(--input);
@@ -477,7 +467,12 @@ tr.rules-off td { opacity: 0.45; }
 .login-card input::placeholder { color: var(--muted); }
 .access { display: flex; flex-direction: column; gap: 28px; }
 .access section { display: flex; flex-direction: column; gap: 12px; }
-.access select {
+
+/* --- select (Base UI headless primitive, styled to match .filters input) --- */
+.ui-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: var(--input);
   border: 1px solid var(--border-strong);
   color: var(--text);
@@ -485,8 +480,32 @@ tr.rules-off td { opacity: 0.45; }
   padding: 7px 12px;
   font-family: var(--mono);
   font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.3s;
 }
-.access select:focus { outline: none; border-color: var(--text); }
+.ui-select-trigger:focus-visible { outline: none; border-color: var(--text); }
+.ui-select-icon { font-size: 9px; color: var(--muted); }
+.ui-select-positioner { z-index: 20; outline: none; }
+.ui-select-popup {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  min-width: var(--anchor-width);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+.ui-select-item {
+  padding: 6px 10px;
+  border-radius: 3px;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+}
+.ui-select-item[data-highlighted] { background: var(--hover); }
+.ui-select-item[data-selected] { color: var(--accent); }
 .token-fresh {
   background: var(--surface);
   border: 1px solid var(--border-strong);

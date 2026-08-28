@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import Select from "./ui/Select";
 
 // Access screen: personal API tokens of the signed-in user, plus user
 // management for admins. Bootstrap-key sessions see only the users section
@@ -200,10 +201,14 @@ function Users() {
           autoComplete="new-password"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="member">member</option>
-          <option value="admin">admin</option>
-        </select>
+        <Select
+          value={role}
+          onValueChange={setRole}
+          options={[
+            { value: "member", label: "member" },
+            { value: "admin", label: "admin" },
+          ]}
+        />
         <button onClick={save} disabled={!login.trim()}>
           Save user
         </button>
@@ -223,10 +228,14 @@ function Users() {
               <tr key={u.login}>
                 <td className="app">{u.login}</td>
                 <td className="src">
-                  <select value={u.role} onChange={(e) => setUserRole(u, e.target.value)}>
-                    <option value="member">member</option>
-                    <option value="admin">admin</option>
-                  </select>
+                  <Select
+                    value={u.role}
+                    onValueChange={(v) => setUserRole(u, v)}
+                    options={[
+                      { value: "member", label: "member" },
+                      { value: "admin", label: "admin" },
+                    ]}
+                  />
                 </td>
                 <td className="ts">{new Date(u.created_at).toLocaleString()}</td>
                 <td>

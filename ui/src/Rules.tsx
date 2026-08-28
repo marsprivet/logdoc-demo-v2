@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import Select from "./ui/Select";
 
 // Notification rules screen: GET/POST/DELETE /api/v1/notify/rules.
 // Config-file rules are listed read-only; UI rules are editable and persist
@@ -251,13 +252,14 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
               disabled={editing !== null}
               onChange={(e) => setForm({ ...f, name: e.target.value })}
             />
-            <select
+            <Select
               value={f.type}
-              onChange={(e) => setForm({ ...f, type: e.target.value })}
-            >
-              <option value="error_threshold">error_threshold</option>
-              <option value="silence">silence</option>
-            </select>
+              onValueChange={(v) => setForm({ ...f, type: v })}
+              options={[
+                { value: "error_threshold", label: "error_threshold" },
+                { value: "silence", label: "silence" },
+              ]}
+            />
             <input
               placeholder={f.type === "silence" ? "app (required)" : "app (optional)"}
               value={f.app}
