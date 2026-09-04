@@ -64,32 +64,3 @@ export const LevelBadges: Story = {
   ),
 };
 
-export const ChipsAndPills: Story = {
-  render: () => (
-    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-      <span className="chip">
-        app=billing<button className="chip-x">×</button>
-      </span>
-      <span className="field">duration_ms=120</span>
-      <span className="grp">+ 2</span>
-    </div>
-  ),
-};
-
-export const TabsAndWindow: Story = {
-  render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <span className="tabs">
-        <span className="tab on">Logs</span>
-        <span className="tab">Topology</span>
-        <span className="tab">Rules</span>
-        <span className="tab">Access</span>
-      </span>
-      <span style={{ display: "flex", gap: 4 }}>
-        <span className="winbtn">15m</span>
-        <span className="winbtn on">1h</span>
-        <span className="winbtn">24h</span>
-      </span>
-    </div>
-  ),
-};

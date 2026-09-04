@@ -14,4 +14,7 @@ export const figmaLinks = {
   input: `${FIGMA_FILE}?node-id=REPLACE_ME`,
   select: `${FIGMA_FILE}?node-id=REPLACE_ME`,
   confirmDialog: `${FIGMA_FILE}?node-id=REPLACE_ME`,
+  chips: `${FIGMA_FILE}?node-id=REPLACE_ME`,
+  tabs: `${FIGMA_FILE}?node-id=REPLACE_ME`,
+  table: `${FIGMA_FILE}?node-id=REPLACE_ME`,
 };

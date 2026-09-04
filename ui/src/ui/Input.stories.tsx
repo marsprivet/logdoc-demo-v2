@@ -26,7 +26,7 @@ export const WithValue: Story = {
 };
 
 export const Password: Story = {
-  args: { type: "password", placeholder: "password (min 8; empty keeps current)" },
+  args: { type: "password", placeholder: "password (min 8)" },
 };
 
 export const Number: Story = {
