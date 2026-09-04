@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Input } from "@base-ui/react/input";
 import { Button } from "@base-ui/react/button";
 import Select from "./ui/Select";
+import ConfirmDialog from "./ui/ConfirmDialog";
 
 // Access screen: personal API tokens of the signed-in user, plus user
 // management for admins. Bootstrap-key sessions see only the users section
@@ -45,6 +46,7 @@ function Tokens() {
   const [name, setName] = useState("");
   const [fresh, setFresh] = useState<string | null>(null); // shown exactly once
   const [error, setError] = useState<string | null>(null);
+  const [confirmRevoke, setConfirmRevoke] = useState<Token | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -73,8 +75,6 @@ function Tokens() {
   };
 
   const revoke = async (t: Token) => {
-    if (!window.confirm(`Revoke token "${t.name}"? Clients using it stop working immediately.`))
-      return;
     try {
       await api(`/api/v1/auth/tokens?id=${t.id}`, { method: "DELETE" });
       await load();
@@ -118,7 +118,7 @@ function Tokens() {
                 <td className="app">{t.name}</td>
                 <td className="ts">{new Date(t.created_at).toLocaleString()}</td>
                 <td>
-                  <span className="clickable" onClick={() => revoke(t)}>
+                  <span className="clickable" onClick={() => setConfirmRevoke(t)}>
                     revoke
                   </span>
                 </td>
@@ -128,6 +128,19 @@ function Tokens() {
         </table>
       )}
       {tokens && tokens.length === 0 && <p className="muted">No tokens yet.</p>}
+      <ConfirmDialog
+        open={confirmRevoke !== null}
+        onOpenChange={(open) => !open && setConfirmRevoke(null)}
+        title="Revoke token"
+        description={
+          confirmRevoke
+            ? `Revoke "${confirmRevoke.name}"? Clients using it stop working immediately.`
+            : ""
+        }
+        confirmLabel="Revoke"
+        danger
+        onConfirm={() => confirmRevoke && revoke(confirmRevoke)}
+      />
     </section>
   );
 }
@@ -138,6 +151,7 @@ function Users() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("member");
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -179,7 +193,6 @@ function Users() {
   };
 
   const remove = async (u: User) => {
-    if (!window.confirm(`Delete user "${u.login}" and revoke their tokens?`)) return;
     try {
       await api(`/api/v1/users?login=${encodeURIComponent(u.login)}`, { method: "DELETE" });
       await load();
@@ -241,7 +254,7 @@ function Users() {
                 </td>
                 <td className="ts">{new Date(u.created_at).toLocaleString()}</td>
                 <td>
-                  <span className="clickable" onClick={() => remove(u)}>
+                  <span className="clickable" onClick={() => setConfirmDelete(u)}>
                     delete
                   </span>
                 </td>
@@ -250,6 +263,17 @@ function Users() {
           </tbody>
         </table>
       )}
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        onOpenChange={(open) => !open && setConfirmDelete(null)}
+        title="Delete user"
+        description={
+          confirmDelete ? `Delete "${confirmDelete.login}" and revoke their tokens?` : ""
+        }
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => confirmDelete && remove(confirmDelete)}
+      />
       {users && users.length === 0 && (
         <p className="muted">
           No users yet — everyone with the API key is an admin. Create accounts to give

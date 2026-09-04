@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Input } from "@base-ui/react/input";
 import { Button } from "@base-ui/react/button";
 import Select from "./ui/Select";
+import ConfirmDialog from "./ui/ConfirmDialog";
 
 // Notification rules screen: GET/POST/DELETE /api/v1/notify/rules.
 // Config-file rules are listed read-only; UI rules are editable and persist
@@ -120,6 +121,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
   const [formError, setFormError] = useState<string | null>(null);
   const [form, setForm] = useState<Form | null>(null); // null = form hidden
   const [editing, setEditing] = useState<string | null>(null); // original name when editing
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -179,7 +181,6 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
   };
 
   const remove = async (name: string) => {
-    if (!window.confirm(`Delete rule "${name}"?`)) return;
     try {
       const res = await fetch(`/api/v1/notify/rules?name=${encodeURIComponent(name)}`, {
         method: "DELETE",
@@ -402,7 +403,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
                       >
                         edit
                       </span>
-                      <span className="clickable" onClick={() => remove(r.name)}>
+                      <span className="clickable" onClick={() => setConfirmDelete(r.name)}>
                         delete
                       </span>
                     </>
@@ -417,6 +418,15 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
           </tbody>
         </table>
       )}
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        onOpenChange={(open) => !open && setConfirmDelete(null)}
+        title="Delete rule"
+        description={confirmDelete ? `Delete "${confirmDelete}"?` : ""}
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => confirmDelete && remove(confirmDelete)}
+      />
     </div>
   );
 }
