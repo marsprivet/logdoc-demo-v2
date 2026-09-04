@@ -4,3 +4,6 @@ bin/
 /logdoc.yml
 ui/node_modules/
 ui/tsconfig.tsbuildinfo
+
+*storybook.log
+storybook-static
