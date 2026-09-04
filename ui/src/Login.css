@@ -1,0 +1,23 @@
+/* Login.tsx: sign-in card and API-key card. */
+
+.login { display: flex; flex-direction: column; gap: 14px; max-width: 360px; margin: 60px auto; }
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.login-card input {
+  background: var(--input);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.login-card input:focus { outline: none; border-color: var(--text); }
+.login-card input::placeholder { color: var(--muted); }

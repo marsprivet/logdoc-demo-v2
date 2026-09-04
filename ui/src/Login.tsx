@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input } from "@base-ui/react/input";
 import { Button } from "@base-ui/react/button";
+import "./Login.css";
 
 // Login screen: a user session (login + password → JWT) or a raw API key /
 // personal token. Whatever succeeds lands in localStorage("logdoc_api_key")

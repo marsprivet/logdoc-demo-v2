@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { Input } from "@base-ui/react/input";
 import { Button } from "@base-ui/react/button";
+import "./LogsView.css";
 
 type Entry = {
   ts: string;

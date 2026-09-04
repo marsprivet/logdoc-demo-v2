@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { figmaLinks } from "./figma-links";
+import "../LogsView.css"; // .chip / .chip-x / .field / .grp are LogsView's
 
 const meta: Meta = {
-  title: "Controls/Chips & Pills",
+  title: "Controls/Chips",
   parameters: { design: { type: "figma", url: figmaLinks.chips } },
 };
 export default meta;

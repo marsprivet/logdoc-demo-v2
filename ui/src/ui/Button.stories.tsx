@@ -18,11 +18,11 @@ export const Secondary: Story = {
 };
 
 export const Active: Story = {
-  args: { children: "■ Stop", className: "tail on" },
+  args: { children: "Stop", className: "tail on" },
 };
 
 export const Disabled: Story = {
-  args: { children: "⇩ CSV", disabled: true },
+  args: { children: "Export CSV", disabled: true },
 };
 
 export const Danger: Story = {

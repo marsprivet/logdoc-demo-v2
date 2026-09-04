@@ -1,4 +1,5 @@
 import { Select as BaseSelect } from "@base-ui/react/select";
+import "./Select.css";
 
 export type SelectOption = { value: string; label: string };
 

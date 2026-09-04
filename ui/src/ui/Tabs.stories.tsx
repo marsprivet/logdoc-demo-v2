@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { figmaLinks } from "./figma-links";
+import "../App.css"; // .tabs / .tab are App's — .winbtn itself is in tokens.css
 
 const meta: Meta = {
   title: "Controls/Tabs & Window",

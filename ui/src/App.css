@@ -1,0 +1,30 @@
+/* App.tsx: header (logo, version, logout) and the Logs/Topology/Rules/
+   Access page tabs. */
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.logo { height: 26px; display: block; }
+.app-version {
+  margin-left: -10px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tabs { display: flex; gap: 4px; }
+.tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 5px 12px;
+}
+.tab:hover { color: var(--text); background: transparent; border-color: transparent; }
+.tab.on { color: var(--accent); }

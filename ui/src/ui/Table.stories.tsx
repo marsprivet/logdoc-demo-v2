@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { figmaLinks } from "./figma-links";
+import "../LogsView.css"; // tr.row.* level tints, table.compact are LogsView's
 
 const meta: Meta = {
   title: "Controls/Table",

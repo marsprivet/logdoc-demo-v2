@@ -1,0 +1,33 @@
+/* Rules.tsx: notification rules — the rule editor form and its table row states. */
+
+.rules-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.rules-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rules-form .filters input.short { width: 110px; min-width: 0; }
+.rules-channels { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+.rules-match {
+  background: var(--input);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  min-height: 84px;
+  resize: vertical;
+}
+.rules-match:focus { outline: none; border-color: var(--text); }
+.rules-match::placeholder { color: var(--muted); }
+.rules-actions { display: flex; gap: 8px; }
+tr.rules-off td { opacity: 0.45; }
+.rules-rowactions { white-space: nowrap; font-family: var(--mono); font-size: 12px; }
+.rules-rowactions .clickable { margin-right: 10px; color: var(--muted); }
+.rules-rowactions .clickable:hover { color: var(--accent); }

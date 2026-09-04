@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@base-ui/react/button";
+import "./App.css";
 import LogsView, { type LogsRequest } from "./LogsView";
 import Topology from "./Topology";
 import Rules from "./Rules";

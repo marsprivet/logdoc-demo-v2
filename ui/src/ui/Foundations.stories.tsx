@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { figmaLinks } from "./figma-links";
+import "../LogsView.css"; // .lv (level badges) is LogsView's
 
 const meta: Meta = {
   title: "Foundations",

@@ -1,0 +1,76 @@
+/* Topology.tsx: the architecture map — canvas, floating node/edge/
+   changes panels, key-value rows. (.winbtn lives in tokens.css — it's
+   shared with LogsView's period picker.) */
+
+.topo { display: flex; flex-direction: column; }
+.topo-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.topo-bar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.topo-sep { color: var(--border-strong); }
+.topo-hint-bottom {
+  margin-top: 6px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.topo-body { position: relative; }
+.topo-canvas {
+  width: 100%;
+  height: calc(100vh - 150px);
+  min-height: 400px;
+  background: var(--deep);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: block;
+}
+.topo-empty {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 420px;
+  text-align: center;
+  pointer-events: none;
+}
+.topo-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 264px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+.topo-changes {
+  right: auto;
+  left: 12px;
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+}
+.topo-changes .topo-title { word-break: normal; }
+.topo-changes .topo-title .muted { font-weight: 400; font-size: 11px; }
+.topo-changes-sec { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
+.topo-changes-sec > .muted { font-size: 11px; margin-bottom: 2px; }
+.topo-changes .topo-link .bad { color: #f53e3e; }
+.topo-changes .topo-link .accent { color: var(--accent); }
+.topo-title { font-weight: 600; margin-bottom: 8px; word-break: break-all; font-family: var(--mono); }
+.kv { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; }
+.kv span { color: var(--muted); }
+.kv b { font-weight: 600; font-family: var(--mono); }
+.kv b.bad { color: #f53e3e; }
+.topo-links { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
+.topo-deploys { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
+.topo-deploys > .muted { font-size: 11px; margin-bottom: 2px; }
+.topo-deploys .kv span.accent { color: var(--accent); font-family: var(--mono); }
+.topo-link {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 2px 0;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.topo-link:hover { color: var(--accent); }
+.topo-actions { display: flex; gap: 6px; margin-top: 10px; }
+.topo-actions button { flex: 1; padding: 5px 0; font-size: 12px; }

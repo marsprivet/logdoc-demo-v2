@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@base-ui/react/button";
+import "./Topology.css";
 
 // Architecture map: a force-directed canvas over GET /api/v1/topology.
 // The layout model follows the logdoc.org topology demo: soft repulsion,

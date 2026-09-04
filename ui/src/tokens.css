@@ -1,0 +1,187 @@
+/* Design tokens inherited from the v1 client (logdoc2, var.scss + logs.module.scss).
+   Shared foundation: fonts, tokens, reset, and the handful of primitives
+   (button, input, table, mono-text cell utilities) reused across every
+   page — Logs, Topology, Rules, Access, Login. Imported once, in main.tsx.
+   Anything owned by a single component lives in that component's own
+   <Name>.css instead — see App.css / LogsView.css / Topology.css /
+   Rules.css / Login.css / Access.css / ui/Select.css / ui/ConfirmDialog.css. */
+
+@font-face {
+  font-family: "Golos Text";
+  src: url("/fonts/GolosText-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Golos Text";
+  src: url("/fonts/GolosText-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Golos Text";
+  src: url("/fonts/GolosText-DemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Hack";
+  src: url("/fonts/Hack-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Hack";
+  src: url("/fonts/Hack-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #16151a;
+  --surface: #292930;
+  --input: #37373f;
+  --deep: #1d1d22;
+  --hover: #242429;
+  --accent: #e35b28;
+  --text: #ffffff;
+  --muted: #7e7e7e;
+  --border: #37373f;
+  --border-strong: #6a6a6a;
+  --mono: "Hack", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+/* Reserve the scrollbar's gutter permanently so popups that briefly lock
+   body scroll (Select's trigger-aligned popup, future dialogs) don't shift
+   page width — and everything flex-wrapped on it — when the scrollbar
+   disappears and reappears. */
+html { scrollbar-gutter: stable; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 "Golos Text", Helvetica, Arial, sans-serif;
+}
+
+.wrap { max-width: 1440px; margin: 0 auto; padding: 16px 24px; }
+
+.accent { color: var(--accent); }
+.muted { color: var(--muted); }
+
+/* Terminal-style section labels, like "// node type" on logdoc.org. */
+.sect {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.clickable { cursor: pointer; transition: color 0.3s; }
+.clickable:hover { color: var(--accent); }
+
+/* --- buttons --- */
+button {
+  background: var(--accent);
+  border: 1px solid transparent;
+  color: #fff;
+  border-radius: 4px;
+  padding: 7px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+button:hover {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+button.tail { background: var(--surface); border-color: transparent; }
+button.tail:hover { background: transparent; border-color: #fff; color: var(--text); }
+button.tail.on { background: transparent; border-color: var(--accent); color: var(--accent); }
+button.danger { background: #f53e3e; }
+button.danger:hover { background: transparent; border-color: #f53e3e; color: #f53e3e; }
+
+/* Small period/window toggle — LogsView's period picker & density
+   toggle, Topology's window picker & "Changes" toggle. */
+.winbtn {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 0 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  border-radius: 3px;
+}
+.winbtn:hover { background: transparent; border-color: var(--border-strong); color: var(--text); }
+.winbtn.on { color: var(--text); border-color: var(--accent); background: var(--surface); }
+a.winbtn { text-decoration: none; }
+
+/* --- text inputs --- */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filters input {
+  background: var(--input);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  transition: border-color 0.3s;
+}
+.filters input::placeholder { color: var(--muted); }
+.filters input:focus { outline: none; border-color: var(--text); }
+.filters input:first-child { min-width: 220px; }
+.filters input[type="number"] { width: 90px; }
+
+/* --- tables --- */
+table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: lowercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 10px;
+}
+td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.ts { white-space: nowrap; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.src { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.app { font-family: var(--mono); font-size: 12px; }
+.msg { white-space: pre-wrap; word-break: break-word; font-family: var(--mono); font-size: 12px; }
+.field {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--deep);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.error {
+  background: rgba(233, 66, 66, 0.24);
+  border: 1px solid #f53e3e;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 10px 0;
+}
+.empty { text-align: center; padding: 30px; }

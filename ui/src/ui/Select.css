@@ -1,0 +1,39 @@
+/* Select.tsx: Base UI headless primitive, styled to match .filters input. */
+
+.ui-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--input);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+.ui-select-trigger:focus-visible { outline: none; border-color: var(--text); }
+.ui-select-icon { font-size: 9px; color: var(--muted); }
+.ui-select-positioner { z-index: 20; outline: none; }
+.ui-select-popup {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  min-width: var(--anchor-width);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+.ui-select-item {
+  padding: 6px 10px;
+  border-radius: 3px;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+}
+.ui-select-item[data-highlighted] { background: var(--hover); }
+.ui-select-item[data-selected] { color: var(--accent); }
