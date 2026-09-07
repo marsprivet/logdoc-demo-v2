@@ -25,14 +25,14 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Hack";
-  src: url("/fonts/Hack-Regular.ttf") format("truetype");
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Regular.ttf") format("truetype");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: "Hack";
-  src: url("/fonts/Hack-Bold.ttf") format("truetype");
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Bold.ttf") format("truetype");
   font-weight: 700;
   font-display: swap;
 }
@@ -44,12 +44,12 @@
   --input: #37373f;
   --deep: #1d1d22;
   --hover: #242429;
-  --accent: #e35b28;
+  --accent: #FF4E0E;
   --text: #ffffff;
   --muted: #7e7e7e;
   --border: #37373f;
   --border-strong: #6a6a6a;
-  --mono: "Hack", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --mono: "JetBrains Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -88,13 +88,13 @@ body {
 button {
   background: var(--accent);
   border: 1px solid transparent;
-  color: #fff;
+  color: var(--text);
   border-radius: 4px;
-  padding: 7px 16px;
+  padding: 8px 16px;
   cursor: pointer;
-  font-family: inherit;
+  font-family: "JetBrains Mono";
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   transition: background 0.3s, border-color 0.3s, color 0.3s;
 }
 button:hover {
@@ -103,10 +103,19 @@ button:hover {
   color: var(--accent);
 }
 button.tail { background: var(--surface); border-color: transparent; }
-button.tail:hover { background: transparent; border-color: #fff; color: var(--text); }
+button.tail:hover { background: transparent; border-color: var(--text); color: var(--text); }
 button.tail.on { background: transparent; border-color: var(--accent); color: var(--accent); }
+
+
 button.danger { background: #f53e3e; }
 button.danger:hover { background: transparent; border-color: #f53e3e; color: #f53e3e; }
+
+button:disabled {
+  background: var(--muted);
+  border-color: transparent;
+  color: var(--surface);
+  cursor: not-allowed;
+}
 
 /* Small period/window toggle — LogsView's period picker & density
    toggle, Topology's window picker & "Changes" toggle. */
@@ -143,6 +152,7 @@ a.winbtn { text-decoration: none; }
 .filters input::placeholder { color: var(--muted); }
 .filters input:focus { outline: none; border-color: var(--text); }
 .filters input:first-child { min-width: 220px; }
+.filters > .clearable-input:first-child input { min-width: 220px; }
 .filters input[type="number"] { width: 90px; }
 
 /* --- tables --- */
@@ -176,6 +186,9 @@ td {
   font-family: var(--mono);
   font-size: 11px;
 }
+/* clickable fields (LogsView: click a field to filter by it) pick up
+   the accent border on hover, not just the .clickable text color. */
+.field.clickable:hover { border-color: var(--accent); }
 
 .error {
   background: rgba(233, 66, 66, 0.24);

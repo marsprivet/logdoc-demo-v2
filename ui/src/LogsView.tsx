@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { Input } from "@base-ui/react/input";
 import { Button } from "@base-ui/react/button";
+import ClearableInput from "./ui/ClearableInput";
 import "./LogsView.css";
 
 type Entry = {
@@ -380,16 +381,16 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
   return (
     <>
       <div className="filters">
-        <Input
+        <ClearableInput
           placeholder="$ app, app2..."
           value={app}
-          onChange={(e) => setApp(e.target.value)}
+          onValueChange={setApp}
           onKeyDown={(e) => e.key === "Enter" && search()}
         />
-        <Input
+        <ClearableInput
           placeholder="$ grep message..."
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onValueChange={setQ}
           onKeyDown={(e) => e.key === "Enter" && search()}
         />
         <Button onClick={() => search()}>Search</Button>
