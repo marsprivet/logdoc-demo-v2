@@ -274,6 +274,19 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
     setLvl((prev) => (prev.includes(name) ? prev.filter((l) => l !== name) : [...prev, name]));
   }
 
+  // Levels and the time window apply as soon as they change, like chips do:
+  // re-run the search, or restart the tail with the new filter. Comparing
+  // with the last applied value skips mount (and StrictMode's re-run).
+  const filterKey = JSON.stringify([lvl, period, period === "custom" ? [customFrom, customTo] : null]);
+  const appliedFilterKey = useRef(filterKey);
+  useEffect(() => {
+    if (appliedFilterKey.current === filterKey) return;
+    appliedFilterKey.current = filterKey;
+    if (tailing) startTail();
+    else void search();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
+
   function addChip(c: Chip) {
     if (chips.some((x) => sameChip(x, c))) return;
     const next = [...chips, c];
