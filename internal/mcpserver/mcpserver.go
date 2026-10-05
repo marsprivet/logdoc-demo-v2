@@ -1,8 +1,9 @@
-// Package mcpserver — the agent interface: an embedded MCP server with four
-// tools (query_logs, get_topology, get_topology_diff, get_service_card) over
-// Streamable HTTP.
+// Package mcpserver — the agent interface: an embedded MCP server over
+// Streamable HTTP with five tools: query_logs, get_topology,
+// get_topology_diff, get_service_card, declare_topology.
 // Agents get the same view of the system as the UI: logs, the architecture
-// map, and per-service summaries.
+// map, and per-service summaries — and can declare the architecture they
+// found by reading the code.
 package mcpserver
 
 import (
@@ -25,12 +26,13 @@ type Server struct {
 	backend query.Backend
 	stats   query.StatsSink
 	manager *graph.Manager
+	catalog *graph.Catalog
 	mcp     *sdk.Server
 }
 
 // New builds the MCP server and registers the tools.
-func New(backend query.Backend, stats query.StatsSink, manager *graph.Manager, version string) *Server {
-	s := &Server{backend: backend, stats: stats, manager: manager}
+func New(backend query.Backend, stats query.StatsSink, manager *graph.Manager, catalog *graph.Catalog, version string) *Server {
+	s := &Server{backend: backend, stats: stats, manager: manager, catalog: catalog}
 	s.mcp = sdk.NewServer(&sdk.Implementation{Name: "logdoc", Version: version}, nil)
 
 	sdk.AddTool(s.mcp, &sdk.Tool{
@@ -58,9 +60,32 @@ func New(backend query.Backend, stats query.StatsSink, manager *graph.Manager, v
 		Name: "get_service_card",
 		Description: "Everything about one service: entry/error counts, inbound and outbound " +
 			"edges with rates, recent deploys detected from logs (version changes), " +
-			"and its most recent error log entries. Correlate deploy timestamps with " +
-			"the first errors to spot bad releases.",
+			"its most recent error log entries, and catalog metadata (owner, " +
+			"description, links such as repo/runbook, tags). Correlate deploy " +
+			"timestamps with the first errors to spot bad releases; use owner and " +
+			"links to say who to page and where the runbook is.",
 	}, s.getServiceCard)
+
+	sdk.AddTool(s.mcp, &sdk.Tool{
+		Name: "declare_topology",
+		Description: "Declare the architecture found by analyzing the source code: services " +
+			"(nodes) and directed links (edges). REPLACES the previous declaration " +
+			"entirely, so always send the complete graph. Declared links appear on the map " +
+			"immediately (dashed until confirmed by real traffic); disagreement between the " +
+			"declared and observed graph is architecture drift. Conventions: " +
+			"(1) node.group = business domain/stage; name pipeline stages \"1 · stage\", " +
+			"\"2 · stage\"… and the UI lays them out left-to-right; infra nodes use groups " +
+			"databases, kafka topics, kafka clusters, redis, clickhouse. " +
+			"(2) node.labels = extra grouping planes beyond the domain (dc, country, " +
+			"provider…), multi-values joined with \"/\" (dc: \"DM/XS\") — the UI re-clusters " +
+			"by any label key and can simulate a whole plane value going down (DC outage). " +
+			"(3) kafka edges ALWAYS point service→topic, for producers and consumers alike. " +
+			"(4) edge.evidence doubles as the human 'what flows here and why' text on the " +
+			"edge card (up to 2000 bytes) — write a business explanation plus the file:line " +
+			"or ADR reference. " +
+			"(5) node.description should say the BUSINESS function: what it does, what it " +
+			"reads/writes, why it exists — not just a tech label.",
+	}, s.declareTopology)
 
 	return s
 }
@@ -209,6 +234,27 @@ func (s *Server) getTopologyDiff(ctx context.Context, _ *sdk.CallToolRequest, ar
 	return nil, diff, nil
 }
 
+// --- declare_topology ---
+
+type declareTopologyArgs struct {
+	Nodes []graph.DeclaredNode `json:"nodes" jsonschema:"services the code declares: app (required), description (business function), group (domain/stage), labels (extra planes: dc, country, provider; '/' joins multi-values)"`
+	Edges []graph.DeclaredEdge `json:"edges" jsonschema:"directed links: src, dst, optional transport (http, grpc, sql, redis, kafka, ...) and evidence (business 'what & why' + file:line; kafka edges point service→topic)"`
+}
+
+type declareTopologyResult struct {
+	Status string `json:"status"`
+	Nodes  int    `json:"nodes"`
+	Edges  int    `json:"edges"`
+}
+
+func (s *Server) declareTopology(ctx context.Context, _ *sdk.CallToolRequest, args declareTopologyArgs) (*sdk.CallToolResult, declareTopologyResult, error) {
+	g := graph.DeclaredGraph{Nodes: args.Nodes, Edges: args.Edges}
+	if err := s.manager.DeclareTopology(ctx, model.DefaultTenant, g); err != nil {
+		return nil, declareTopologyResult{}, err
+	}
+	return nil, declareTopologyResult{Status: "ok", Nodes: len(g.Nodes), Edges: len(g.Edges)}, nil
+}
+
 // --- get_service_card ---
 
 type getServiceCardArgs struct {
@@ -234,6 +280,11 @@ type getServiceCardResult struct {
 	Outbound     []edgeInfo       `json:"outbound"` // services this one calls
 	Deploys      []graph.Deploy   `json:"deploys"`  // recent version changes, newest first
 	RecentErrors []query.EntryDTO `json:"recent_errors"`
+	// Catalog metadata (empty when the service has no catalog entry).
+	Owner       string            `json:"owner,omitempty"`
+	Description string            `json:"description,omitempty"`
+	Links       map[string]string `json:"links,omitempty"`
+	Tags        []string          `json:"tags,omitempty"`
 }
 
 func (s *Server) getServiceCard(ctx context.Context, _ *sdk.CallToolRequest, args getServiceCardArgs) (*sdk.CallToolResult, getServiceCardResult, error) {
@@ -283,6 +334,11 @@ func (s *Server) getServiceCard(ctx context.Context, _ *sdk.CallToolRequest, arg
 		return nil, getServiceCardResult{}, fmt.Errorf("deploys unavailable: %w", err)
 	}
 	res.Deploys = append(res.Deploys, deploys...)
+
+	if meta, err := s.catalog.Get(ctx, model.DefaultTenant, args.App); err == nil {
+		res.Owner, res.Description = meta.Owner, meta.Description
+		res.Links, res.Tags = meta.Links, meta.Tags
+	}
 
 	from := time.Now().Add(-window)
 	entries, err := s.backend.Query(ctx, query.Plan{

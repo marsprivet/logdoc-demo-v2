@@ -7,7 +7,9 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite" // database/sql driver
@@ -65,9 +67,43 @@ CREATE TABLE IF NOT EXISTS deploys (
 	version   TEXT    NOT NULL,
 	ts        INTEGER NOT NULL -- unix milliseconds
 );
-CREATE INDEX IF NOT EXISTS deploys_app_ts ON deploys (tenant_id, app, ts DESC);`)
+CREATE INDEX IF NOT EXISTS deploys_app_ts ON deploys (tenant_id, app, ts DESC);
+CREATE TABLE IF NOT EXISTS declared_nodes (
+	tenant_id   TEXT NOT NULL,
+	app         TEXT NOT NULL,
+	description TEXT NOT NULL DEFAULT '',
+	grp         TEXT NOT NULL DEFAULT '',
+	PRIMARY KEY (tenant_id, app)
+);
+CREATE TABLE IF NOT EXISTS declared_edges (
+	tenant_id TEXT NOT NULL,
+	src       TEXT NOT NULL,
+	dst       TEXT NOT NULL,
+	transport TEXT NOT NULL DEFAULT '',
+	evidence  TEXT NOT NULL DEFAULT '',
+	PRIMARY KEY (tenant_id, src, dst)
+);
+CREATE TABLE IF NOT EXISTS catalog (
+	tenant_id   TEXT    NOT NULL,
+	app         TEXT    NOT NULL,
+	owner       TEXT    NOT NULL DEFAULT '',
+	description TEXT    NOT NULL DEFAULT '',
+	links       TEXT    NOT NULL DEFAULT '{}', -- JSON: name → URL
+	tags        TEXT    NOT NULL DEFAULT '[]', -- JSON array
+	updated_at  INTEGER NOT NULL,              -- unix milliseconds
+	PRIMARY KEY (tenant_id, app)
+);`)
 	if err != nil {
 		return fmt.Errorf("sqlite migrate: %w", err)
+	}
+	// Columns added after the table shipped; "duplicate column" is fine.
+	if _, err := s.db.Exec(`ALTER TABLE declared_nodes ADD COLUMN grp TEXT NOT NULL DEFAULT ''`); err != nil &&
+		!strings.Contains(err.Error(), "duplicate column") {
+		return fmt.Errorf("sqlite migrate declared_nodes.grp: %w", err)
+	}
+	if _, err := s.db.Exec(`ALTER TABLE declared_nodes ADD COLUMN labels TEXT NOT NULL DEFAULT '{}'`); err != nil &&
+		!strings.Contains(err.Error(), "duplicate column") {
+		return fmt.Errorf("sqlite migrate declared_nodes.labels: %w", err)
 	}
 	return nil
 }
@@ -225,6 +261,167 @@ func (s *Store) Deploys(ctx context.Context, tenantID, app string, since time.Ti
 		out = append(out, d)
 	}
 	return out, rows.Err()
+}
+
+// ReplaceDeclared atomically replaces the tenant's declared graph: the
+// source of truth is the latest code analysis, not an accumulation.
+func (s *Store) ReplaceDeclared(ctx context.Context, tenantID string, g graph.DeclaredGraph) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("declared replace begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	for _, q := range []string{
+		`DELETE FROM declared_nodes WHERE tenant_id = ?`,
+		`DELETE FROM declared_edges WHERE tenant_id = ?`,
+	} {
+		if _, err := tx.ExecContext(ctx, q, tenantID); err != nil {
+			return fmt.Errorf("declared clear: %w", err)
+		}
+	}
+	for _, n := range g.Nodes {
+		labels := "{}"
+		if len(n.Labels) > 0 {
+			if b, jerr := json.Marshal(n.Labels); jerr == nil {
+				labels = string(b)
+			}
+		}
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO declared_nodes (tenant_id, app, description, grp, labels) VALUES (?, ?, ?, ?, ?)`,
+			tenantID, n.App, n.Description, n.Group, labels); err != nil {
+			return fmt.Errorf("declared node %s: %w", n.App, err)
+		}
+	}
+	for _, e := range g.Edges {
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO declared_edges (tenant_id, src, dst, transport, evidence) VALUES (?, ?, ?, ?, ?)`,
+			tenantID, e.Src, e.Dst, e.Transport, e.Evidence); err != nil {
+			return fmt.Errorf("declared edge %s→%s: %w", e.Src, e.Dst, err)
+		}
+	}
+	return tx.Commit()
+}
+
+func (s *Store) DeclaredGraph(ctx context.Context, tenantID string) (graph.DeclaredGraph, error) {
+	var g graph.DeclaredGraph
+
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT app, description, grp, labels FROM declared_nodes WHERE tenant_id = ? ORDER BY app`, tenantID)
+	if err != nil {
+		return g, fmt.Errorf("declared nodes: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var n graph.DeclaredNode
+		var labels string
+		if err := rows.Scan(&n.App, &n.Description, &n.Group, &labels); err != nil {
+			return g, err
+		}
+		if labels != "" && labels != "{}" {
+			_ = json.Unmarshal([]byte(labels), &n.Labels)
+		}
+		g.Nodes = append(g.Nodes, n)
+	}
+	if err := rows.Err(); err != nil {
+		return g, err
+	}
+
+	erows, err := s.db.QueryContext(ctx,
+		`SELECT src, dst, transport, evidence FROM declared_edges WHERE tenant_id = ? ORDER BY src, dst`, tenantID)
+	if err != nil {
+		return g, fmt.Errorf("declared edges: %w", err)
+	}
+	defer func() { _ = erows.Close() }()
+	for erows.Next() {
+		var e graph.DeclaredEdge
+		if err := erows.Scan(&e.Src, &e.Dst, &e.Transport, &e.Evidence); err != nil {
+			return g, err
+		}
+		g.Edges = append(g.Edges, e)
+	}
+	return g, erows.Err()
+}
+
+func (s *Store) UpsertMeta(ctx context.Context, tenantID string, m graph.ServiceMeta) error {
+	links, err := json.Marshal(orEmptyMap(m.Links))
+	if err != nil {
+		return fmt.Errorf("catalog links marshal %s: %w", m.App, err)
+	}
+	tags, err := json.Marshal(orEmptySlice(m.Tags))
+	if err != nil {
+		return fmt.Errorf("catalog tags marshal %s: %w", m.App, err)
+	}
+	_, err = s.db.ExecContext(ctx, `
+INSERT INTO catalog (tenant_id, app, owner, description, links, tags, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT (tenant_id, app) DO UPDATE SET
+	owner       = excluded.owner,
+	description = excluded.description,
+	links       = excluded.links,
+	tags        = excluded.tags,
+	updated_at  = excluded.updated_at`,
+		tenantID, m.App, m.Owner, m.Description, string(links), string(tags),
+		time.Now().UnixMilli())
+	if err != nil {
+		return fmt.Errorf("catalog upsert %s: %w", m.App, err)
+	}
+	return nil
+}
+
+func (s *Store) DeleteMeta(ctx context.Context, tenantID, app string) error {
+	if _, err := s.db.ExecContext(ctx,
+		`DELETE FROM catalog WHERE tenant_id = ? AND app = ?`, tenantID, app); err != nil {
+		return fmt.Errorf("catalog delete %s: %w", app, err)
+	}
+	return nil
+}
+
+func (s *Store) CatalogMeta(ctx context.Context, tenantID string) ([]graph.ServiceMeta, error) {
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT app, owner, description, links, tags
+		 FROM catalog WHERE tenant_id = ? ORDER BY app`, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("catalog query: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []graph.ServiceMeta
+	for rows.Next() {
+		var m graph.ServiceMeta
+		var links, tags string
+		if err := rows.Scan(&m.App, &m.Owner, &m.Description, &links, &tags); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal([]byte(links), &m.Links); err != nil {
+			return nil, fmt.Errorf("catalog links unmarshal %s: %w", m.App, err)
+		}
+		if err := json.Unmarshal([]byte(tags), &m.Tags); err != nil {
+			return nil, fmt.Errorf("catalog tags unmarshal %s: %w", m.App, err)
+		}
+		if len(m.Links) == 0 {
+			m.Links = nil
+		}
+		if len(m.Tags) == 0 {
+			m.Tags = nil
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+// orEmptyMap/orEmptySlice keep stored JSON at {} / [] instead of null.
+func orEmptyMap(m map[string]string) map[string]string {
+	if m == nil {
+		return map[string]string{}
+	}
+	return m
+}
+
+func orEmptySlice(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }
 
 func (s *Store) Close() error {

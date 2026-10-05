@@ -2,6 +2,8 @@ package graph
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -109,16 +111,108 @@ func NewDeploysHandler(m *Manager) http.Handler {
 	})
 }
 
-// NewExportHandler — GET /api/v1/topology/export?format=mermaid|markdown&window=5m
-// Renders the current architecture map as text for docs and diagrams.
-func NewExportHandler(m *Manager) http.Handler {
+// NewDeclaredHandler — GET/PUT /api/v1/topology/declared
+// GET returns the declared graph; PUT replaces it (typically posted by an
+// agent that analyzed the repository: nodes, edges, transports, evidence).
+func NewDeclaredHandler(m *Manager) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodGet {
+			g, err := m.Declared(r.Context(), model.DefaultTenant)
+			if err != nil {
+				http.Error(w, `{"error":"declared graph unavailable"}`, http.StatusInternalServerError)
+				return
+			}
+			if g.Nodes == nil {
+				g.Nodes = []DeclaredNode{}
+			}
+			if g.Edges == nil {
+				g.Edges = []DeclaredEdge{}
+			}
+			_ = json.NewEncoder(w).Encode(g)
+			return
+		}
+
+		var g DeclaredGraph
+		// 16MB: a few thousand nodes with rich descriptions and per-edge
+		// business evidence outgrow 1MB easily.
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<20)).Decode(&g); err != nil {
+			http.Error(w, `{"error":"invalid JSON body"}`, http.StatusBadRequest)
+			return
+		}
+		if err := m.DeclareTopology(r.Context(), model.DefaultTenant, g); err != nil {
+			b, _ := json.Marshal(map[string]string{"error": err.Error()})
+			http.Error(w, string(b), http.StatusBadRequest)
+			return
+		}
+		_, _ = fmt.Fprintf(w, `{"status":"ok","nodes":%d,"edges":%d}`, len(g.Nodes), len(g.Edges))
+	})
+}
+
+// NewCatalogListHandler — GET /api/v1/catalog
+// Every catalog entry of the tenant: config-declared and runtime-edited.
+func NewCatalogListHandler(c *Catalog) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		services, err := c.List(r.Context(), model.DefaultTenant)
+		if err != nil {
+			http.Error(w, `{"error":"catalog unavailable"}`, http.StatusInternalServerError)
+			return
+		}
+		if services == nil {
+			services = []ServiceMeta{}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"services": services})
+	})
+}
+
+// NewCatalogEditHandler — PUT/DELETE /api/v1/catalog/{app}
+// Creates, replaces or removes one runtime entry; config-declared entries
+// are read-only here (edit logdoc.yml instead).
+func NewCatalogEditHandler(c *Catalog) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app := r.PathValue("app")
+		w.Header().Set("Content-Type", "application/json")
+
+		var err error
+		switch r.Method {
+		case http.MethodDelete:
+			err = c.Delete(r.Context(), model.DefaultTenant, app)
+		default: // PUT
+			var m ServiceMeta
+			if derr := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10)).Decode(&m); derr != nil {
+				http.Error(w, `{"error":"invalid JSON body"}`, http.StatusBadRequest)
+				return
+			}
+			m.App = app // the path is authoritative
+			err = c.Put(r.Context(), model.DefaultTenant, m)
+		}
+
+		switch {
+		case err == nil:
+			_, _ = w.Write([]byte(`{"status":"ok"}`))
+		case errors.Is(err, ErrConfigDefined):
+			http.Error(w, `{"error":"defined in the config file (read-only via API)"}`, http.StatusConflict)
+		default:
+			b, _ := json.Marshal(map[string]string{"error": err.Error()})
+			http.Error(w, string(b), http.StatusBadRequest)
+		}
+	})
+}
+
+// NewExportHandler — GET /api/v1/topology/export?format=mermaid|markdown|backstage&window=5m
+// Renders the current architecture map as text: diagrams for docs, or
+// Backstage catalog entities (point Backstage's URL reader at this endpoint
+// — with ?api_key=<token> when auth is on — and its catalog keeps itself
+// fresh from logs).
+func NewExportHandler(m *Manager, c *Catalog) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		format := r.URL.Query().Get("format")
 		if format == "" {
 			format = "mermaid"
 		}
-		if format != "mermaid" && format != "markdown" {
-			http.Error(w, `{"error":"invalid format (want mermaid or markdown)"}`, http.StatusBadRequest)
+		if format != "mermaid" && format != "markdown" && format != "backstage" {
+			http.Error(w, `{"error":"invalid format (want mermaid, markdown or backstage)"}`, http.StatusBadRequest)
 			return
 		}
 		window, ok := parseWindow(w, r)
@@ -133,10 +227,19 @@ func NewExportHandler(m *Manager) http.Handler {
 		}
 
 		var out string
-		if format == "markdown" {
+		switch format {
+		case "markdown":
 			w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
 			out = Markdown(topo)
-		} else {
+		case "backstage":
+			metas, err := c.List(r.Context(), model.DefaultTenant)
+			if err != nil {
+				http.Error(w, `{"error":"catalog unavailable"}`, http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/yaml; charset=utf-8")
+			out = Backstage(topo, metas)
+		default:
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 			out = Mermaid(topo)
 		}

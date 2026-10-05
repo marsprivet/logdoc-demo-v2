@@ -7,3 +7,5 @@ ui/tsconfig.tsbuildinfo
 
 *storybook.log
 storybook-static
+.idea/
+logdoc.out

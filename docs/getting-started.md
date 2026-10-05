@@ -165,16 +165,31 @@ The same over HTTP:
 curl 'localhost:9001/api/v1/topology/diff?window=1h'
 ```
 
+The card also takes the human half of a catalog entry: an admin sets owner,
+description, links (repo, runbook, dashboard) and tags right on the card —
+or declares them in the `catalog:` section of `logdoc.yml` (then they are
+read-only in the UI). Agents get the same fields through MCP, so "who owns
+billing and where is its runbook?" is answerable mid-incident.
+
 Export the current architecture for your docs:
 
 ```bash
 curl 'localhost:9001/api/v1/topology/export?format=mermaid'
 ```
 
+Run Backstage? `format=backstage` renders the same map as catalog entities —
+components with owners, links and `dependsOn` edges from real traffic.
+Register the endpoint as a URL location (append `&api_key=<token>` when auth
+is on) and the catalog stops going stale:
+
+```bash
+curl 'localhost:9001/api/v1/topology/export?format=backstage&window=24h'
+```
+
 ## 7. Let an agent in (MCP)
 
 LogDoc is an MCP server — `query_logs`, `get_topology`, `get_topology_diff`,
-`get_service_card` over Streamable HTTP:
+`get_service_card`, `declare_topology` over Streamable HTTP:
 
 ```bash
 claude mcp add --transport http logdoc http://localhost:9001/mcp \
@@ -183,6 +198,30 @@ claude mcp add --transport http logdoc http://localhost:9001/mcp \
 
 Then ask: *"why is checkout failing?"* — the agent walks the map, follows
 the error edges and reads the logs itself.
+
+It also works in reverse: open the agent in your repository and ask it to
+*"analyze the code and declare the architecture in LogDoc"* — it reads the
+code and calls `declare_topology` with services, links, transports and
+`file:line` evidence. Declared links render dashed until real traffic
+confirms them, so the map is complete before the first log line.
+
+Conventions that make a declaration first-class on the map:
+
+- `node.group` — the business domain/stage. Numbered stage names
+  (`"1 · campaigns"`, `"2 · serving"`, …) lay out left-to-right as a
+  pipeline. Infra uses the reserved groups `databases`, `kafka topics`,
+  `kafka clusters`, `redis`, `clickhouse`.
+- `node.labels` — extra grouping planes: `{"dc": "DM/XS"}` and the like
+  (`/` joins multiple values). The UI re-clusters by any label key and
+  simulates a plane value going down (a DC outage: what dies, what
+  degrades, what cascades).
+- `node.description` — the business function: what it does, what it reads
+  and writes, why it exists. It becomes the service card.
+- kafka edges always point service→topic — for producers and consumers
+  alike; the evidence text says which one it is.
+- `edge.evidence` — doubles as the edge card's human "what flows here and
+  why" (up to 2000 bytes): a business sentence plus the `file:line` or ADR
+  reference.
 
 ## 8. Alerts
 
