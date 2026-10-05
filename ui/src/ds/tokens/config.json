@@ -1,0 +1,78 @@
+{
+	"source": [
+		"tokens/color.json",
+		"tokens/spacing.json",
+		"tokens/typography.json",
+		"tokens/radius.json"
+	],
+	"platforms": {
+		"css_colors": {
+			"transformGroup": "css",
+			"buildPath": "Colors/",
+			"files": [
+				{
+					"destination": "style.css",
+					"format": "css/variables",
+					"filter": {
+						"type": "color"
+					}
+				},
+				{
+					"destination": "../style.css",
+					"format": "css/variables"
+				}
+			]
+		},
+		"css_spacings": {
+			"transformGroup": "css",
+			"buildPath": "Spacing/",
+			"files": [
+				{
+					"destination": "style.css",
+					"format": "css/variables",
+					"filter": {
+						"type": "spacing"
+					}
+				},
+				{
+					"destination": "../style.css",
+					"format": "css/variables"
+				}
+			]
+		},
+		"css_typography": {
+			"transformGroup": "css",
+			"buildPath": "Typography/",
+			"files": [
+				{
+					"destination": "style.css",
+					"format": "css/variables",
+					"filter": {
+						"type": "typography"
+					}
+				},
+				{
+					"destination": "../style.css",
+					"format": "css/variables"
+				}
+			]
+		},
+		"css_radius": {
+			"transformGroup": "css",
+			"buildPath": "Radius/",
+			"files": [
+				{
+					"destination": "style.css",
+					"format": "css/variables",
+					"filter": {
+						"type": "radius"
+					}
+				},
+				{
+					"destination": "../style.css",
+					"format": "css/variables"
+				}
+			]
+		}
+	}
+}

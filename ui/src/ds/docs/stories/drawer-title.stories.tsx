@@ -1,0 +1,52 @@
+import {
+	Button,
+	ButtonColor,
+	ButtonVariant,
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+	Typography,
+} from '@ds/components';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { titleArgTypes } from './shared/dialog-drawer-arg-types.js';
+
+const meta: Meta<typeof DrawerTitle> = {
+	title: 'Primitive Components/Drawer/DrawerTitle',
+	component: DrawerTitle,
+	argTypes: titleArgTypes,
+	parameters: {
+		layout: 'fullscreen',
+	},
+	tags: ['autodocs'],
+};
+
+export default meta;
+type Story = StoryObj<typeof DrawerTitle>;
+
+export const Default: Story = {
+	args: {
+		children: 'Drawer title',
+	},
+	render: (args) => (
+		<Drawer>
+			<DrawerTrigger asChild>
+				<Button variant={ButtonVariant.Solid} color={ButtonColor.Primary} size="md">
+					Open drawer
+				</Button>
+			</DrawerTrigger>
+			<DrawerContent>
+				<DrawerHeader>
+					<DrawerTitle {...args} />
+				</DrawerHeader>
+				<DrawerDescription>
+					<Typography size="sm">
+						The title labels the drawer content for assistive technologies.
+					</Typography>
+				</DrawerDescription>
+			</DrawerContent>
+		</Drawer>
+	),
+};

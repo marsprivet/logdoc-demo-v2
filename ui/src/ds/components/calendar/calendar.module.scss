@@ -1,0 +1,454 @@
+// Colour arrives through the `--calendar-internal-*` pairs below. Every rule reads an internal
+// name, never a semantic token directly, so a re-theme moves one component and nothing else. The
+// semantic tokens themselves live in `@signozhq/design-tokens`.
+.calendar {
+	--calendar-internal-background: var(--calendar-background-color, var(--calendar-background));
+	--calendar-internal-button-background: var(--calendar-button-background-color, var(--calendar-button-background));
+	--calendar-internal-button-background-hover: var(--calendar-button-hover-background-color, var(--calendar-button-background-hover));
+	--calendar-internal-button-background-active: var(--calendar-button-active-background-color, var(--calendar-button-background-active));
+	--calendar-internal-button-label: var(--calendar-button-color, var(--calendar-button-label));
+	--calendar-internal-button-label-hover: var(--calendar-button-hover-color, var(--calendar-button-label-hover));
+	--calendar-internal-button-focus-ring: var(--calendar-button-focus-ring-color, var(--calendar-button-focus-ring));
+	--calendar-internal-day-selected-background: var(--calendar-day-selected-background-color, var(--calendar-day-selected-background));
+	--calendar-internal-day-selected-background-hover: var(--calendar-day-selected-hover-background-color, var(--calendar-day-selected-background-hover));
+	--calendar-internal-day-selected-label: var(--calendar-day-selected-color, var(--calendar-day-selected-label));
+	--calendar-internal-day-range-edge-background: var(--calendar-day-range-edge-background-color, var(--calendar-day-range-edge-background));
+	--calendar-internal-day-range-edge-background-hover: var(--calendar-day-range-edge-hover-background-color, var(--calendar-day-range-edge-background-hover));
+	--calendar-internal-day-range-edge-label: var(--calendar-day-range-edge-color, var(--calendar-day-range-edge-label));
+	--calendar-internal-day-range-middle-background: var(--calendar-day-range-middle-background-color, var(--calendar-day-range-middle-background));
+	--calendar-internal-day-range-middle-background-hover: var(--calendar-day-range-middle-hover-background-color, var(--calendar-day-range-middle-background-hover));
+	--calendar-internal-day-range-middle-label: var(--calendar-day-range-middle-color, var(--calendar-day-range-middle-label));
+	--calendar-internal-day-today-background: var(--calendar-day-today-background-color, var(--calendar-day-today-background));
+	--calendar-internal-day-today-label: var(--calendar-day-today-color, var(--calendar-day-today-label));
+	--calendar-internal-day-outside-label: var(--calendar-day-outside-color, var(--calendar-day-outside-label));
+	--calendar-internal-day-disabled-label: var(--calendar-day-disabled-color, var(--calendar-day-disabled-label));
+	--calendar-internal-weekday-label: var(--calendar-weekday-color, var(--calendar-weekday-label));
+	--calendar-internal-footer-label: var(--calendar-footer-color, var(--calendar-internal-weekday-label));
+	--calendar-internal-week-number-label: var(--calendar-week-number-color, var(--calendar-week-number-label));
+	--calendar-internal-select-background: var(--calendar-select-background-color, var(--calendar-select-background));
+	--calendar-internal-select-border: var(--calendar-select-border-color, var(--calendar-select-border));
+	--calendar-internal-select-border-focus: var(--calendar-select-focus-border-color, var(--calendar-select-border-focus));
+	--calendar-internal-select-icon: var(--calendar-select-icon-color, var(--calendar-select-icon));
+	--calendar-internal-select-shadow: var(--calendar-select-box-shadow, var(--calendar-select-shadow));
+	--calendar-internal-select-shadow-focus: var(--calendar-select-focus-box-shadow, var(--calendar-select-shadow-focus));
+
+	--calendar-internal-cell-size: var(--calendar-cell-size, var(--spacing-16));
+	--calendar-internal-transition-duration: var(--calendar-transition-duration, 150ms);
+
+	// How far a range day paints into the gap beside it, so two neighbours meet mid-gap. Keep it on
+	// the same variables and fallbacks that space `.calendar__week` and `.calendar__day`.
+	--calendar-internal-range-bridge: calc(
+		var(--calendar-week-gap, var(--spacing-4)) / 2 + var(--calendar-day-margin, var(--spacing-2))
+	);
+	// `box-shadow` offsets are physical, so the bridges are flipped by hand when the grid runs
+	// right to left.
+	--calendar-internal-range-direction: 1;
+
+	box-sizing: border-box;
+	width: fit-content;
+	background-color: var(--calendar-internal-background);
+	padding: var(--calendar-padding, var(--spacing-6));
+
+	&:dir(rtl) {
+		--calendar-internal-range-direction: -1;
+	}
+}
+
+/* Month layout */
+
+.calendar__months {
+	display: flex;
+	flex-direction: column;
+	gap: var(--calendar-months-gap, var(--spacing-8));
+	position: relative;
+
+	@media (min-width: 768px) {
+		flex-direction: row;
+	}
+}
+
+.calendar__month {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	gap: var(--calendar-month-gap, var(--spacing-8));
+}
+
+.calendar__month-caption {
+	display: flex;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	height: var(--calendar-internal-cell-size);
+	width: 100%;
+	// The nav row is absolutely positioned over the caption, so the label keeps one cell clear on
+	// each side for the arrows to sit in.
+	padding-left: var(--calendar-internal-cell-size);
+	padding-right: var(--calendar-internal-cell-size);
+}
+
+/* Navigation */
+
+.calendar__nav {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--calendar-nav-gap, var(--spacing-2));
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.calendar__chevron {
+	width: var(--calendar-chevron-size, var(--spacing-8));
+	height: var(--calendar-chevron-size, var(--spacing-8));
+}
+
+/* Caption label and dropdowns */
+
+.calendar__dropdowns {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: var(--calendar-internal-cell-size);
+	gap: var(--calendar-dropdown-gap, var(--spacing-3));
+	font-size: var(--calendar-dropdown-font-size, var(--periscope-font-size-small));
+	font-weight: var(--calendar-dropdown-font-weight, var(--font-weight-medium));
+}
+
+.calendar__dropdown-root {
+	position: relative;
+	border: var(--calendar-dropdown-border-width, 1px) solid var(--calendar-internal-select-border);
+	border-radius: var(--calendar-dropdown-border-radius, var(--radius-1));
+	box-shadow: var(--calendar-internal-select-shadow);
+
+	&:has(:focus) {
+		border-color: var(--calendar-internal-select-border-focus);
+		box-shadow: var(--calendar-internal-select-shadow-focus);
+	}
+}
+
+// The native select is laid invisible over the label, so it keeps its own picker and its own
+// keyboard behaviour while the label is what gets painted.
+.calendar__dropdown {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	background-color: var(--calendar-internal-select-background);
+}
+
+.calendar__caption-label {
+	user-select: none;
+	font-weight: var(--calendar-caption-label-font-weight, var(--font-weight-medium));
+}
+
+.calendar__caption-label--label {
+	font-size: var(--calendar-caption-label-font-size, var(--periscope-font-size-small));
+}
+
+.calendar__caption-label--dropdown {
+	display: flex;
+	box-sizing: border-box;
+	align-items: center;
+	gap: var(--calendar-caption-label-dropdown-gap, var(--spacing-2));
+	height: var(--calendar-caption-label-dropdown-height, var(--spacing-16));
+	padding: var(--calendar-caption-label-dropdown-padding, 0 var(--spacing-2) 0 var(--spacing-4));
+	border-radius: var(--calendar-caption-label-dropdown-border-radius, var(--radius-1));
+	font-size: var(--calendar-caption-label-dropdown-font-size, var(--periscope-font-size-small));
+
+	svg {
+		width: var(--calendar-caption-label-dropdown-svg-size, var(--spacing-7));
+		height: var(--calendar-caption-label-dropdown-svg-size, var(--spacing-7));
+		color: var(--calendar-internal-select-icon);
+	}
+}
+
+/* Day grid */
+
+.calendar__month-grid {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+// The gap and the margin below repeat what a week row and a day cell use, so a weekday letter
+// sits over the column it names instead of drifting across the row.
+.calendar__weekdays {
+	display: flex;
+	gap: var(--calendar-week-gap, var(--spacing-4));
+	margin-bottom: var(--calendar-weekdays-margin-bottom, var(--spacing-4));
+}
+
+.calendar__weekday {
+	flex: 1;
+	// Without this a header keeps its letters' min-content width, and the seven of them stop
+	// matching the day columns as soon as the calendar is squeezed.
+	min-width: 0;
+	margin-inline: var(--calendar-day-margin, var(--spacing-2));
+	user-select: none;
+	color: var(--calendar-internal-weekday-label);
+	border-radius: var(--calendar-weekday-border-radius, var(--radius-1));
+	font-weight: var(--calendar-weekday-font-weight, var(--font-weight-normal));
+	font-size: var(--calendar-weekday-font-size, var(--periscope-font-size-small));
+}
+
+.calendar__week {
+	display: flex;
+	gap: var(--calendar-week-gap, var(--spacing-4));
+	width: 100%;
+}
+
+.calendar__week-number-header {
+	user-select: none;
+	width: var(--calendar-internal-cell-size);
+}
+
+// The week number heads a row that is taller than the number's own box, so the cell centres it
+// rather than leaving it at the top of the row.
+.calendar__week-number {
+	display: flex;
+	align-items: center;
+	user-select: none;
+	color: var(--calendar-internal-week-number-label);
+	font-size: var(--calendar-week-number-font-size, var(--periscope-font-size-small));
+}
+
+.calendar__week-number-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	width: var(--calendar-internal-cell-size);
+	height: var(--calendar-internal-cell-size);
+}
+
+// The cell, not the button inside it. `.calendar__week` makes the row a flex container, which
+// blockifies every cell, so the margin does apply here.
+.calendar__day {
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	margin: var(--calendar-day-margin, var(--spacing-2));
+	text-align: center;
+	aspect-ratio: 1;
+	user-select: none;
+}
+
+// Every day state is painted on the button rather than here. The button declares its own `color`,
+// which beats anything the cell hands down, and it covers the cell, so a background put here is
+// either invisible or has to be undone again for each selection state.
+.calendar__hidden {
+	visibility: hidden;
+}
+
+/* Buttons */
+
+.calendar__button {
+	display: inline-flex;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	gap: var(--calendar-button-gap, var(--spacing-3));
+	white-space: nowrap;
+	border: none;
+	border-radius: var(--calendar-button-border-radius, var(--radius-1));
+	background-color: var(--calendar-internal-button-background);
+	color: var(--calendar-internal-button-label);
+	font-weight: var(--calendar-button-font-weight, var(--font-weight-medium));
+	font-variant-numeric: slashed-zero;
+	// TODO: Convert this hardcoded value to a semantic token, the same one Button is waiting on.
+	letter-spacing: var(--calendar-button-letter-spacing, -0.005em);
+	cursor: var(--calendar-button-cursor, pointer);
+	user-select: none;
+	transition:
+		background-color var(--calendar-internal-transition-duration) ease,
+		color var(--calendar-internal-transition-duration) ease;
+
+	&:hover:not(:disabled):not([aria-disabled="true"]) {
+		background-color: var(--calendar-internal-button-background-hover);
+		color: var(--calendar-internal-button-label-hover);
+	}
+
+	&:active:not(:disabled):not([aria-disabled="true"]) {
+		background-color: var(--calendar-internal-button-background-active);
+	}
+
+	&:focus-visible {
+		outline: var(--calendar-internal-button-focus-ring) solid
+			var(--calendar-button-focus-outline-width, 1px);
+		outline-offset: var(--calendar-button-focus-outline-offset, 1px);
+	}
+
+	&:disabled,
+	&[aria-disabled="true"] {
+		opacity: var(--calendar-button-disabled-opacity, 0.6);
+		cursor: var(--calendar-button-disabled-cursor, not-allowed);
+	}
+}
+
+.calendar__button[data-variant="nav"] {
+	width: var(--calendar-internal-cell-size);
+	height: var(--calendar-internal-cell-size);
+	padding: var(--calendar-nav-button-padding, 0);
+}
+
+// Both arrows mirror together: the grid itself is laid out right to left, so the arrow pointing at
+// the previous month is the one on the right.
+:dir(rtl) .calendar__button[data-variant="nav"] > svg {
+	transform: rotate(180deg);
+}
+
+.calendar__button[data-variant="day"] {
+	width: 100%;
+	height: var(--calendar-internal-cell-size);
+	min-width: var(--calendar-internal-cell-size);
+	padding: var(--calendar-day-button-padding, 0);
+
+	// The day states the cell is marked with, repeated here because the cell cannot reach the day
+	// number: this button declares its own `color`. Selection follows and outranks them by source
+	// order.
+	&[data-outside="true"] {
+		color: var(--calendar-internal-day-outside-label);
+	}
+
+	&[data-today="true"] {
+		background-color: var(--calendar-internal-day-today-background);
+		color: var(--calendar-internal-day-today-label);
+	}
+
+	&:disabled,
+	&[aria-disabled="true"] {
+		color: var(--calendar-internal-day-disabled-label);
+	}
+
+	// Each selection state repeats hover and active inside its own block. The plain hover above
+	// counts two `:not()` arguments towards its specificity, so it outweighs a bare selection
+	// selector and would otherwise paint a hovered selected day in the unselected colour.
+	&[data-selected-single="true"] {
+		background-color: var(--calendar-internal-day-selected-background);
+		color: var(--calendar-internal-day-selected-label);
+
+		&:hover:not(:disabled):not([aria-disabled="true"]),
+		&:active:not(:disabled):not([aria-disabled="true"]) {
+			background-color: var(--calendar-internal-day-selected-background-hover);
+			color: var(--calendar-internal-day-selected-label);
+		}
+	}
+
+	// The band is each day's `box-shadow`, which takes the button's own box, so it keeps the day's
+	// height and corners without a second element. These set how far each side reaches; the rules
+	// after the block zero a side whose neighbour is not painted.
+	&[data-range-middle="true"] {
+		--calendar-internal-range-reach-start: var(--calendar-internal-range-bridge);
+		--calendar-internal-range-reach-end: var(--calendar-internal-range-bridge);
+	}
+
+	&[data-range-start="true"]:not([data-range-end="true"]) {
+		--calendar-internal-range-reach-end: var(--calendar-internal-range-bridge);
+	}
+
+	&[data-range-end="true"]:not([data-range-start="true"]) {
+		--calendar-internal-range-reach-start: var(--calendar-internal-range-bridge);
+	}
+
+	// An outside day whose own month is displayed too is skipped: painting it would draw the range
+	// twice, with a second end. The first month's leading and the last month's trailing outside days
+	// have no other copy, so they paint.
+	&:not([data-duplicate="true"]) {
+		&[data-range-start="true"],
+		&[data-range-middle="true"],
+		&[data-range-end="true"] {
+			box-shadow:
+				calc(-1 * var(--calendar-internal-range-direction) * var(--calendar-internal-range-reach-start, 0px))
+					0 0 0 var(--calendar-internal-day-range-middle-background),
+				calc(var(--calendar-internal-range-direction) * var(--calendar-internal-range-reach-end, 0px))
+					0 0 0 var(--calendar-internal-day-range-middle-background);
+		}
+
+		&[data-range-middle="true"] {
+			background-color: var(--calendar-internal-day-range-middle-background);
+			color: var(--calendar-internal-day-range-middle-label);
+			border-radius: 0;
+
+			&:hover:not(:disabled):not([aria-disabled="true"]),
+			&:active:not(:disabled):not([aria-disabled="true"]) {
+				background-color: var(--calendar-internal-day-range-middle-background-hover);
+				color: var(--calendar-internal-day-range-middle-label);
+			}
+		}
+
+		&[data-range-start="true"],
+		&[data-range-end="true"] {
+			background-color: var(--calendar-internal-day-range-edge-background);
+			color: var(--calendar-internal-day-range-edge-label);
+
+			&:hover:not(:disabled):not([aria-disabled="true"]),
+			&:active:not(:disabled):not([aria-disabled="true"]) {
+				background-color: var(--calendar-internal-day-range-edge-background-hover);
+				color: var(--calendar-internal-day-range-edge-label);
+			}
+		}
+
+		// An end rounds its outer corners only, so it runs straight into the band. The `:not()`
+		// guards keep a one-day range, which is both ends, rounded on all four.
+		&[data-range-start="true"] {
+			border-start-start-radius: var(--calendar-range-edge-border-radius, var(--radius-2));
+			border-end-start-radius: var(--calendar-range-edge-border-radius, var(--radius-2));
+		}
+
+		&[data-range-end="true"] {
+			border-start-end-radius: var(--calendar-range-edge-border-radius, var(--radius-2));
+			border-end-end-radius: var(--calendar-range-edge-border-radius, var(--radius-2));
+		}
+
+		&[data-range-start="true"]:not([data-range-end="true"]) {
+			border-start-end-radius: 0;
+			border-end-end-radius: 0;
+		}
+
+		&[data-range-end="true"]:not([data-range-start="true"]) {
+			border-start-start-radius: 0;
+			border-end-start-radius: 0;
+		}
+	}
+}
+
+// Zero the reach toward a neighbour that is not painted, or the band sticks half a gap out into
+// empty space.
+.calendar__week > .calendar__day:first-of-type > .calendar__button[data-variant="day"],
+.calendar__day[data-hidden] + .calendar__day > .calendar__button[data-variant="day"],
+.calendar__day:has(> [data-duplicate]) + .calendar__day > .calendar__button[data-variant="day"] {
+	--calendar-internal-range-reach-start: 0px;
+}
+
+.calendar__week > .calendar__day:last-of-type > .calendar__button[data-variant="day"],
+.calendar__day:has(+ .calendar__day[data-hidden]) > .calendar__button[data-variant="day"],
+.calendar__day:has(+ .calendar__day > [data-duplicate]) > .calendar__button[data-variant="day"] {
+	--calendar-internal-range-reach-end: 0px;
+}
+
+.calendar__day-button-label,
+.calendar__day-button-affix {
+	font-size: var(--calendar-day-button-font-size, var(--periscope-font-size-small));
+}
+
+/* Footer */
+
+// Sets its own size and colour: otherwise it inherits the page's, well above the 11px labels
+// around it.
+.calendar__footer {
+	margin-top: var(--calendar-footer-margin-top, var(--spacing-4));
+	color: var(--calendar-internal-footer-label);
+	font-size: var(--calendar-footer-font-size, var(--periscope-font-size-small));
+	line-height: var(--calendar-footer-line-height, var(--line-height-18));
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.calendar__button {
+		transition: none;
+	}
+}

@@ -1,0 +1,84 @@
+import {
+	Button,
+	ButtonColor,
+	ButtonVariant,
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+	Typography,
+} from '@ds/components';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { contentArgTypes } from './shared/dialog-drawer-arg-types.js';
+
+const { position: _, ...sharedContentArgTypes } = contentArgTypes ?? {};
+
+const meta: Meta<typeof DrawerContent> = {
+	title: 'Primitive Components/Drawer/DrawerContent',
+	component: DrawerContent,
+	argTypes: {
+		...sharedContentArgTypes,
+		direction: {
+			control: 'select',
+			options: ['left', 'right', 'top', 'bottom'],
+			description: 'The side of the viewport from which the drawer appears.',
+			table: {
+				category: 'Appearance',
+				type: { summary: '"left" | "right" | "top" | "bottom"' },
+				defaultValue: { summary: 'right' },
+			},
+		},
+		showOverlay: {
+			control: 'boolean',
+			description: 'Whether to render the overlay behind this content instance.',
+			table: {
+				category: 'Appearance',
+				type: { summary: 'boolean' },
+				defaultValue: { summary: 'true' },
+			},
+		},
+	},
+	parameters: {
+		layout: 'fullscreen',
+	},
+	tags: ['autodocs'],
+};
+
+export default meta;
+type Story = StoryObj<typeof DrawerContent>;
+
+export const Default: Story = {
+	args: {
+		showOverlay: true,
+	},
+	render: (args) => (
+		<Drawer>
+			<DrawerTrigger asChild>
+				<Button variant={ButtonVariant.Solid} color={ButtonColor.Primary} size="md">
+					Open drawer
+				</Button>
+			</DrawerTrigger>
+			<DrawerContent {...args}>
+				<DrawerHeader>
+					<DrawerTitle>Drawer content</DrawerTitle>
+				</DrawerHeader>
+				<DrawerDescription>
+					<Typography size="sm">
+						This story focuses on the DrawerContent surface and its layout-related props.
+					</Typography>
+				</DrawerDescription>
+				<DrawerFooter>
+					<Button variant={ButtonVariant.Ghost} color="secondary" size="md">
+						Secondary action
+					</Button>
+					<Button variant={ButtonVariant.Solid} color={ButtonColor.Primary} size="md">
+						Primary action
+					</Button>
+				</DrawerFooter>
+			</DrawerContent>
+		</Drawer>
+	),
+};

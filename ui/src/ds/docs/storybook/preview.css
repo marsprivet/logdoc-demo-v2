@@ -1,0 +1,148 @@
+@import '../../styles.css';
+
+:root {
+	--color-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Improve Storybook UI styling */
+.sb-show-main {
+	background: #0b0c0e; /* Use ink-500 to match story backgrounds */
+	color: #ffffff; /* White text for dark mode */
+	padding: 2rem !important;
+	min-height: 100vh;
+}
+
+.sb-show-main:has(.sbdocs) {
+	padding: 0 !important;
+}
+
+.docs-story > div:first-of-type {
+	position: relative !important;
+	padding: 1rem;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 100%;
+	background-color: #ffffff !important;
+	transition: background-color 0.2s ease;
+
+	> div {
+		width: 100%;
+	}
+}
+
+#storybook-root {
+	width: 90vw;
+}
+
+html.dark .docs-story > div:first-of-type {
+	background-color: #0b0c0e !important;
+}
+
+/*
+ * The font lives on `html` in `index.css` rather than on `.sb-show-main *` here. A rule on every
+ * element inside the canvas cannot reach a portalled popup, and it outranks the monospace a `Kbd`
+ * or a code `Typography` asks for.
+ */
+
+/* Improved typography for better readability - only for Storybook UI */
+
+.sb-show-main body {
+	font-size: 14px;
+
+	line-height: 1.6;
+}
+
+/* Improve code blocks */
+
+pre {
+	background: rgba(0, 0, 0, 0.3);
+
+	border-radius: 6px;
+
+	padding: 0.5rem;
+	margin: 0;
+
+	border: 1px solid rgba(255, 255, 255, 0.1);
+
+	overflow-x: auto;
+}
+
+code {
+	background: rgba(0, 0, 0, 0.2);
+
+	padding: 0.125rem 0.25rem;
+
+	border-radius: 3px;
+
+	font-size: 0.875em;
+
+}
+
+.docblock-source {
+	margin: 1rem 0 !important;
+}
+
+/* Ensure dark mode is applied by default */
+
+.dark {
+	background: #0b0c0e;
+
+	color: var(--text-vanilla-100);
+}
+
+/* Improve component spacing */
+
+.sb-show-main > div {
+	padding: 0;
+}
+
+/*
+ * No blanket `*:focus-visible` outline and no blanket `*` transition here.
+ *
+ * Every component in this library owns its focus ring and its timing: a menu is instant, a button
+ * is not, and a row marks the pointer with a fill and the keyboard with an inset stroke. A rule on
+ * `*` reaches inside all of them and paints a second, hardcoded ring the component cannot see,
+ * which is what put a blue outline on a hovered `Dropdown` row. The cmdk `outline: none !important`
+ * block that used to sit here was undoing the same rule for one component.
+ *
+ * A story that renders raw HTML still gets the browser's own focus ring.
+ */
+
+/* Style Stories component title and spacing */
+.sb-show-main h2:has(+ div[class*='sbdocs-story']),
+.sb-show-main [class*='sbdocs'] h2 {
+	margin-bottom: 1.5rem;
+}
+
+/* Improve spacing between story items */
+
+.sb-show-main [class*='sbdocs-story'] {
+	margin-bottom: 2rem;
+}
+
+.sb-show-main {
+	transition:
+		background-color 0.3s ease,
+		color 0.3s ease;
+}
+
+/* Default (Light Mode) */
+
+.sb-show-main {
+	background-color: #ffffff !important;
+
+	color: #000000 !important;
+}
+
+/* Dark Mode (when html has .dark class) */
+
+html.dark .sb-show-main {
+	background-color: #0b0c0e !important;
+
+	color: #ffffff !important;
+}
+
+.sbdocs-preview .sb-bar {
+	display: none !important;
+}

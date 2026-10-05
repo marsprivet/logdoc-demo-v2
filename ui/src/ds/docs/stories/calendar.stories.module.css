@@ -1,0 +1,65 @@
+.columnLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/*
+ * One labelled calendar per cell. Flex rather than grid: a calendar is `width: fit-content`, and
+ * the two-month example is twice as wide as the rest, which a shared grid track would impose on
+ * every other column. Wrapping puts as many as fit on a row and pushes the rest down instead.
+ */
+.calendarGrid {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.calendarCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+/*
+ * The card around a calendar, on a wrapper because the calendar takes no class. The wrapper paints
+ * the background so the calendar's own square one cannot poke past the rounded corners.
+ */
+.calendarCard {
+  width: fit-content;
+  max-width: 100%;
+  background-color: var(--calendar-background);
+  --calendar-background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px 0 color-mix(in srgb, var(--foreground) 5%, transparent);
+
+  /*
+   * A date cell has a minimum width, so the whole grid has one too, and narrowing the cell is how
+   * a calendar fits a narrower frame rather than overflowing it. The upper bound is the component's
+   * own default, which every viewport from 1067px up resolves to, so a normal screen still shows
+   * the calendar at its real size. The lower bound keeps two months side by side down to 768px,
+   * where the component stacks them anyway.
+   */
+  --calendar-cell-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+/*
+ * Below the width the component stacks its months at, the cell is already at its lower bound, so
+ * what is left to give back is the padding around the grid and the gap around each date.
+ */
+@media (max-width: 48rem) {
+  .calendarCard {
+    --calendar-padding: var(--spacing-4);
+    --calendar-day-margin: var(--spacing-1);
+  }
+}
+
+.caption {
+  white-space: nowrap;
+}

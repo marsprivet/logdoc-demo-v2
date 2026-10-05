@@ -1,0 +1,89 @@
+import {
+	Button,
+	ButtonColor,
+	ButtonVariant,
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+	Typography,
+} from '@ds/components';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { AnimatePresence } from 'motion/react';
+import React from 'react';
+import { overlayArgTypes } from './shared/dialog-drawer-arg-types.js';
+
+const meta: Meta<typeof Dialog> = {
+	title: 'Primitive Components/Dialog/Dialog',
+	component: Dialog,
+	argTypes: overlayArgTypes,
+	parameters: {
+		layout: 'fullscreen',
+	},
+	tags: ['autodocs'],
+};
+
+export default meta;
+type Story = StoryObj<typeof Dialog>;
+
+export const Default: Story = {
+	args: {
+		defaultOpen: false,
+		modal: true,
+	},
+	render: (args) => {
+		const [open, setOpen] = React.useState<boolean | undefined>(args.open ?? args.defaultOpen);
+
+		return (
+			<Dialog
+				{...args}
+				open={args.open ?? open}
+				onOpenChange={(next) => {
+					setOpen(next);
+					args.onOpenChange?.(next);
+				}}
+			>
+				<DialogTrigger asChild>
+					<Button variant={ButtonVariant.Solid} color={ButtonColor.Primary} size="md">
+						Open dialog
+					</Button>
+				</DialogTrigger>
+				<AnimatePresence>
+					{(args.open ?? open) && (
+						<DialogContent key="dialog" width="base" forceMount>
+							<DialogHeader>
+								<DialogTitle>Dialog title</DialogTitle>
+							</DialogHeader>
+							<DialogDescription>
+								<Typography size="sm">
+									Dialog content goes here. Use the primitive dialog components for full control.
+								</Typography>
+							</DialogDescription>
+							<DialogFooter>
+								<Button
+									variant={ButtonVariant.Ghost}
+									color="secondary"
+									onClick={() => setOpen(false)}
+									size="md"
+								>
+									Cancel
+								</Button>
+								<Button
+									variant={ButtonVariant.Solid}
+									color={ButtonColor.Primary}
+									onClick={() => setOpen(false)}
+									size="md"
+								>
+									Confirm
+								</Button>
+							</DialogFooter>
+						</DialogContent>
+					)}
+				</AnimatePresence>
+			</Dialog>
+		);
+	},
+};

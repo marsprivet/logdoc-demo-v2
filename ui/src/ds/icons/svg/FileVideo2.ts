@@ -1,0 +1,19 @@
+import { jsx } from 'react/jsx-runtime';
+import { createIcon } from '../create-icon';
+
+export default createIcon('FileVideo2', (c) =>
+	jsx("svg", {
+	width: 16,
+	height: 16,
+	fill: "none",
+	xmlns: "http://www.w3.org/2000/svg",
+	...c,
+	children: jsx("path", {
+		d: "M2.666 14.667H12a1.333 1.333 0 0 0 1.333-1.334V4.667L10 1.333H4a1.333 1.333 0 0 0-1.334 1.334v2.666m6.667-4V4a1.333 1.333 0 0 0 1.333 1.333h2.667m-6.667 5L9.333 12V8L6.666 9.667M2 8h4c.368 0 .666.298.666.667v2.666A.667.667 0 0 1 6 12H2a.667.667 0 0 1-.667-.667V8.667C1.333 8.298 1.631 8 2 8Z",
+		stroke: "inherit",
+		strokeWidth: 1.33,
+		strokeLinecap: "round",
+		strokeLinejoin: "round"
+	})
+}),
+);

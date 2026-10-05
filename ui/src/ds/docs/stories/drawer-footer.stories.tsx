@@ -1,0 +1,58 @@
+import {
+	Button,
+	ButtonColor,
+	ButtonVariant,
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+	Typography,
+} from '@ds/components';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { footerArgTypes } from './shared/dialog-drawer-arg-types.js';
+
+const meta: Meta<typeof DrawerFooter> = {
+	title: 'Primitive Components/Drawer/DrawerFooter',
+	component: DrawerFooter,
+	argTypes: footerArgTypes,
+	parameters: {
+		layout: 'fullscreen',
+	},
+	tags: ['autodocs'],
+};
+
+export default meta;
+type Story = StoryObj<typeof DrawerFooter>;
+
+export const Default: Story = {
+	render: (args) => (
+		<Drawer>
+			<DrawerTrigger asChild>
+				<Button variant={ButtonVariant.Solid} color={ButtonColor.Primary} size="md">
+					Open drawer
+				</Button>
+			</DrawerTrigger>
+			<DrawerContent>
+				<DrawerHeader>
+					<DrawerTitle>Delete this item</DrawerTitle>
+				</DrawerHeader>
+				<DrawerDescription>
+					<Typography size="sm">
+						Deleting this item cannot be undone and may affect related data.
+					</Typography>
+				</DrawerDescription>
+				<DrawerFooter {...args}>
+					<Button variant={ButtonVariant.Ghost} color="secondary" size="md">
+						Cancel
+					</Button>
+					<Button variant={ButtonVariant.Solid} color={ButtonColor.Primary} size="md">
+						Delete
+					</Button>
+				</DrawerFooter>
+			</DrawerContent>
+		</Drawer>
+	),
+};

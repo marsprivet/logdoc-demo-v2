@@ -1,0 +1,51 @@
+.headingTitle {
+  line-height: 1;
+  margin-top: 0;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.inputSmall {
+  height: 2rem;
+}
+
+/* Button takes no class, so the trigger's font weight sits on the column around it. */
+.datePickerColumn {
+  gap: 0.75rem;
+  --button-font-weight: normal;
+}
+
+.datePickerLabel {
+  padding-inline: 0.25rem;
+}
+
+.datePickerContent {
+  width: auto;
+  overflow: hidden;
+  padding: 0;
+}
+
+.timePickerSection {
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.timePickerInput {
+  background-color: var(--background);
+}
+
+.showcaseContainer {
+  min-height: 600px;
+}
+
+.showcaseLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}

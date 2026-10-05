@@ -1,0 +1,19 @@
+import { jsx } from 'react/jsx-runtime';
+import { createIcon } from '../create-icon';
+
+export default createIcon('Forward', (c) =>
+	jsx("svg", {
+	width: 16,
+	height: 16,
+	fill: "none",
+	xmlns: "http://www.w3.org/2000/svg",
+	...c,
+	children: jsx("path", {
+		d: "M10 11.333 13.334 8m0 0L10 4.667M13.334 8h-8a2.667 2.667 0 0 0-2.667 2.667V12",
+		stroke: "inherit",
+		strokeWidth: 1.33,
+		strokeLinecap: "round",
+		strokeLinejoin: "round"
+	})
+}),
+);

@@ -1,0 +1,118 @@
+import { Meta, Controls, Primary } from '@storybook/addon-docs/blocks';
+import * as SelectStories from './select.stories';
+import * as SelectTriggerStories from './select-trigger.stories';
+import * as SelectContentStories from './select-content.stories';
+import * as SelectItemStories from './select-item.stories';
+import * as SelectGroupStories from './select-group.stories';
+import * as SelectLoadingStories from './select-loading.stories';
+
+<Meta of={SelectStories} />
+
+# Select
+
+Lightweight dropdown select built on Radix UI Select. Use for single or multi-value selection without search. For searchable dropdowns, use Combobox.
+
+For the quick-start preset, see [SelectSimple](?path=/docs/composed-components-selectsimple--docs).
+
+## Basic select (composition)
+
+For full control, compose the subcomponents manually:
+
+```tsx
+import {
+	Select,
+	SelectTrigger,
+	SelectContent,
+	SelectItem,
+	SelectGroup,
+	SelectLabel,
+	SelectSeparator,
+} from '@ds/components';
+import { useState } from 'react';
+
+const frameworks = [
+	{ value: 'react', label: 'React' },
+	{ value: 'vue', label: 'Vue' },
+];
+
+export default function MyComponent() {
+	const [value, setValue] = useState('');
+
+	return (
+		<Select value={value} onChange={(v) => setValue(v as string)}>
+			<SelectTrigger placeholder="Select a framework..." />
+			<SelectContent>
+				{frameworks.map((f) => (
+					<SelectItem key={f.value} value={f.value}>
+						{f.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
+	);
+}
+```
+
+<Primary />
+
+## Select inside a popover
+
+When rendering a select inside a popover or modal, pass `withPortal={false}` to `SelectContent` so the dropdown stays in the same DOM tree and avoids z-index issues:
+
+```tsx
+import {
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+	Select,
+	SelectTrigger,
+	SelectContent,
+	SelectItem,
+	Button,
+} from '@ds/components';
+
+<Popover>
+	<PopoverTrigger asChild>
+		<Button variant="outline">Open</Button>
+	</PopoverTrigger>
+	<PopoverContent>
+		<Select value={value} onChange={(v) => setValue(v as string)}>
+			<SelectTrigger placeholder="Select..." />
+			<SelectContent withPortal={false}>
+				<SelectItem value="react">React</SelectItem>
+				<SelectItem value="vue">Vue</SelectItem>
+			</SelectContent>
+		</Select>
+	</PopoverContent>
+</Popover>;
+```
+
+## Select vs Combobox
+
+| Feature       | Select           | Combobox                  |
+| ------------- | ---------------- | ------------------------- |
+| Search/filter | No               | Yes                       |
+| Multi-select  | Yes (with pills) | Manual                    |
+| Best for      | Simple dropdowns | Large lists, async search |
+
+## Subcomponents
+
+### SelectTrigger
+
+<Controls of={SelectTriggerStories.Default} />
+
+### SelectContent
+
+<Controls of={SelectContentStories.Default} />
+
+### SelectItem
+
+<Controls of={SelectItemStories.Default} />
+
+### SelectGroup
+
+<Controls of={SelectGroupStories.Default} />
+
+### SelectLoading
+
+<Controls of={SelectLoadingStories.Default} />

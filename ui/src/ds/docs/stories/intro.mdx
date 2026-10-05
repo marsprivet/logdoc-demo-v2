@@ -1,0 +1,103 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Intro" />
+
+# Signoz Components Library
+
+React component library powered by Turborepo, React, and Storybook.
+
+## Install & Use
+
+To use the Signoz components library, you need to install the following packages:
+
+```sh
+pnpm add @signozhq/design-tokens @signozhq/ui
+```
+
+In your app's main CSS file (e.g. `index.css` or `global.css`), import the following css:
+
+```css
+@import '@signozhq/design-tokens/dist/style.css';
+@import '@signozhq/design-tokens/dist/themes/signoz-tokens.css';
+```
+
+Then you need to add the data attribute in your element `body` or `html` to select the theme:
+
+```html
+<html lang="en" data-theme="default"></html>
+```
+
+If you want to toggle/change between themes, you just need to update the value of the attribute `data-theme`.
+
+> **tip**: Take a look at [./apps/docs/blue-demo.css](./apps/docs/blue-demo.css) to learn how to create a new theme.
+
+### How to use with Tailwind
+
+In case you want to have our design tokens exposed directly to Tailwind, you can install the following package:
+
+```sh
+pnpm add @signozhq/tailwind-config
+```
+
+And then import the following css:
+
+```css
+@import 'tailwindcss';
+@config "@signozhq/tailwind-config";
+@import '@signozhq/tailwind-config/global.css';
+```
+
+## Storybook
+
+To learn more about the available components, take a look at: https://periscope.signoz.io/
+
+## Available Packages
+
+| Package                     | Description                                                       |
+| --------------------------- | ----------------------------------------------------------------- |
+| `@signozhq/tailwind-config` | Tailwind config, design tokens, and `global.css` (required first) |
+| `@signozhq/ui`              | All UI components (single package with subpath exports)           |
+
+All components live in `@signozhq/ui`. Import by subpath:
+
+```ts
+import { AlertDialog } from '@ds/components';
+import { AnnouncementBanner } from '@ds/components';
+import { Avatar } from '@ds/components';
+import { Badge } from '@ds/components';
+import { Breadcrumb } from '@ds/components';
+import { Button } from '@ds/components';
+import { ButtonGroup } from '@ds/components';
+import { Calendar } from '@ds/components';
+import { Callout } from '@ds/components';
+import { Checkbox } from '@ds/components';
+import { Combobox } from '@ds/components';
+import { Command } from '@ds/components';
+import { DatePicker } from '@ds/components';
+import { Dialog } from '@ds/components';
+import { Divider } from '@ds/components';
+import { Drawer } from '@ds/components';
+import { Dropdown } from '@ds/components';
+import { Input } from '@ds/components';
+import { InputNumber } from '@ds/components';
+import { Kbd } from '@ds/components';
+import { Pagination } from '@ds/components';
+import { Progress } from '@ds/components';
+import { PinList } from '@ds/components';
+import { Pill } from '@ds/components';
+import { Popover } from '@ds/components';
+import { RadioGroup } from '@ds/components';
+import { ResizablePanelGroup } from '@ds/components';
+import { Select } from '@ds/components';
+import { Skeleton } from '@ds/components';
+import { Slider } from '@ds/components';
+import { Spinner } from '@ds/components';
+import { Switch } from '@ds/components';
+import { Table } from '@ds/components';
+import { Tabs } from '@ds/components';
+import { TextEllipsis } from '@ds/components';
+import { Toaster } from '@ds/components';
+import { ToggleGroup } from '@ds/components';
+import { Tooltip } from '@ds/components';
+import { Typography } from '@ds/components';
+```

@@ -1,0 +1,90 @@
+import { Meta, Controls, Primary } from '@storybook/addon-docs/blocks';
+import * as PaginationStories from './pagination.stories';
+
+<Meta of={PaginationStories} />
+
+# Pagination
+
+All-in-one pagination component that renders previous/next buttons and page numbers automatically. Supports controlled and uncontrolled usage, alignment, and an optional page size selector.
+
+For URL-synchronized pagination, see [PaginationUrl](?path=/docs/composed-components-paginationurl--docs). For full primitive control, see [Pagination primitives](?path=/docs/primitive-components-pagination-paginationcontainer--docs).
+
+## How to use
+
+```tsx
+import { Pagination } from '@ds/components';
+import { useState } from 'react';
+
+export default function MyComponent() {
+	const [currentPage, setCurrentPage] = useState(1);
+
+	return (
+		<Pagination
+			total={100}
+			pageSize={10}
+			current={currentPage}
+			onPageChange={(page) => setCurrentPage(page)}
+		/>
+	);
+}
+```
+
+<Primary />
+
+## Uncontrolled usage
+
+Use `defaultCurrent` when you don't need to track the page externally:
+
+```tsx
+<Pagination total={100} pageSize={10} defaultCurrent={1} />
+```
+
+## Alignment
+
+Control horizontal alignment with the `align` prop:
+
+```tsx
+<Pagination total={100} pageSize={10} align="center" />
+<Pagination total={100} pageSize={10} align="end" />
+```
+
+## With page size selector
+
+Enable the page size dropdown with `enablePageSize`. It renders on the right by default:
+
+```tsx
+import { Pagination } from '@ds/components';
+import { useState } from 'react';
+
+export default function MyComponent() {
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
+
+	return (
+		<Pagination
+			total={100}
+			pageSize={pageSize}
+			current={currentPage}
+			onPageChange={setCurrentPage}
+			enablePageSize
+			onPageSizeChange={setPageSize}
+		/>
+	);
+}
+```
+
+Position the selector on the left:
+
+```tsx
+<Pagination total={100} enablePageSize pageSizePosition="left" />
+```
+
+Custom page size options:
+
+```tsx
+<Pagination total={100} enablePageSize pageSizeOptions={[5, 10, 25, 50]} />
+```
+
+## Props
+
+<Controls of={PaginationStories.Default} />
