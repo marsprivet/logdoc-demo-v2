@@ -92,6 +92,13 @@ export interface DrawerWrapperProps {
 	 */
 	showOverlay?: boolean;
 	/**
+	 * Whether the drawer is modal. `false` keeps the page behind it interactive
+	 * (no focus trap, pointer events stay on) — pair it with `showOverlay={false}`
+	 * for a side panel that sits next to live content.
+	 * @default true
+	 */
+	modal?: boolean;
+	/**
 	 * The width of the dialog.
 	 * @default 'base'
 	 */
@@ -206,6 +213,7 @@ export const DrawerWrapper = React.forwardRef<HTMLDivElement, DrawerWrapperProps
 			showCloseButton = true,
 			direction = 'right',
 			showOverlay = true,
+			modal = true,
 			footer,
 			testId,
 			id,
@@ -269,7 +277,7 @@ export const DrawerWrapper = React.forwardRef<HTMLDivElement, DrawerWrapperProps
 		);
 
 		return (
-			<Drawer open={resolvedOpen} onOpenChange={resolvedOnOpenChange}>
+			<Drawer open={resolvedOpen} onOpenChange={resolvedOnOpenChange} modal={modal}>
 				{trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
 				<AnimatePresence>{resolvedOpen ? content : null}</AnimatePresence>
 			</Drawer>

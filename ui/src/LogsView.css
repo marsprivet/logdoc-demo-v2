@@ -4,8 +4,6 @@
 
 .toolbar-end { margin-left: auto; display: inline-flex; gap: 4px; }
 
-.filter-row { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; flex-wrap: wrap; }
-.filter-row + .filter-row { margin-top: 8px; }
 
 /* Level filter: a level badge as a toggle; unselected levels fade back. */
 .level-toggle {

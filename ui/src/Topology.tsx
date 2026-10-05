@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "@ds/components/badge";
 import { Button } from "@ds/components/button";
 import { Callout } from "@ds/components/callout";
-import { Checkbox } from "@ds/components/checkbox";
 import { ConfirmDialog } from "@ds/components/dialog";
+import { DrawerWrapper, type DrawerWrapperProps } from "@ds/components/drawer";
 import { Input } from "@ds/components/input";
 import { PopoverSimple } from "@ds/components/popover";
 import { Tabs } from "@ds/components/tabs";
@@ -158,6 +158,48 @@ function parseLinks(text: string): { links: Record<string, string>; error?: stri
 // no window/export controls.
 const VIEWER = typeof window !== "undefined" && !!(window as unknown as { __SNAP__?: unknown }).__SNAP__;
 
+// Plain label, with an optional thin dark outline (used for the focused
+// branch) so the text stays legible over crossing edges without a background
+// chip — a chip was tried and rejected as visual noise.
+function drawLabel(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  color: string,
+  font: string,
+  align: CanvasTextAlign,
+  outlined: boolean,
+  zm: number,
+) {
+  ctx.font = font;
+  ctx.textAlign = align;
+  if (outlined) {
+    // Stroke first, fill on top: only the outward half of the stroke stays
+    // visible, so it reads as an outside outline rather than thickened type.
+    ctx.lineWidth = 4 / zm;
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#000";
+    ctx.strokeText(text, x, y);
+  }
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+}
+
+// Map cards are side drawers that leave the canvas live: no overlay, no focus
+// trap, and clicks/focus outside (the map, the toolbar) don't dismiss them.
+const SIDE_DRAWER = {
+  modal: false,
+  showOverlay: false,
+  disableOutsideClick: true,
+  width: "narrow",
+  className: "topo-drawer",
+  drawerContentProps: {
+    onInteractOutside: (e: Event) => e.preventDefault(),
+    onOpenAutoFocus: (e: Event) => e.preventDefault(),
+  },
+} satisfies Partial<DrawerWrapperProps>;
+
 function nodeRadius(n: SimNode): number {
   if (n.kind === "group") {
     return Math.min(12 + Math.sqrt(n.members ?? 1) * 1.8, 34);
@@ -181,6 +223,7 @@ export default function Topology({
   const hotRef = useRef(400); // remaining simulation ticks before sleep
   const fitRef = useRef(false); // fit-to-view once the layout cools down
   const hoverRef = useRef<string | null>(null);
+  const edgeHoverRef = useRef<{ src: string; dst: string } | null>(null);
   const selectionRef = useRef<Selection>(null);
   const dragRef = useRef<{ mode: "pan" | "node"; app?: string; sx: number; sy: number } | null>(null);
 
@@ -1092,27 +1135,28 @@ export default function Topology({
         ctx.fill();
 
         // Transport/rate plate on lit edges (the demo's rounded label chip).
-        if ((lit || isSel || (bad && !dim)) && zm > 0.4 && (e.transport || e.rps > 0)) {
+        // Rate label: only for the edge under the cursor, the selected edge,
+        // or a failing one — not every edge lit by a hovered hub node, which
+        // is what piled labels on top of each other.
+        const isHoverEdge =
+          edgeHoverRef.current?.src === e.src && edgeHoverRef.current?.dst === e.dst;
+        if ((isSel || isHoverEdge || (bad && !dim)) && zm > 0.4 && (e.transport || e.rps > 0)) {
           const parts: string[] = [];
           if (e.transport) parts.push(e.transport.toUpperCase());
           if (e.rps > 0) parts.push(`${e.rps.toFixed(e.rps < 10 ? 1 : 0)} rps`);
           if (e.error_rate > 0) parts.push(`${(e.error_rate * 100).toFixed(1)}% err`);
-          const label = parts.join(" · ");
-          const mx = (a.x + b.x) / 2;
-          const my = (a.y + b.y) / 2;
-          ctx.font = `bold ${9 / zm}px ui-monospace, monospace`;
-          const tw = ctx.measureText(label).width;
-          ctx.fillStyle = "rgba(22,21,26,0.92)";
-          ctx.beginPath();
-          ctx.roundRect(mx - tw / 2 - 4 / zm, my - 7 / zm, tw + 8 / zm, 14 / zm, 3 / zm);
-          ctx.fill();
-          ctx.fillStyle = bad
-            ? "rgba(255,122,110,0.95)"
-            : trColor
-              ? `${trColor}ee`
-              : "rgba(216,219,226,0.9)";
-          ctx.textAlign = "center";
-          ctx.fillText(label, mx, my + 3 / zm);
+          // Outlined whenever the edge is part of the focused branch.
+          drawLabel(
+            ctx,
+            parts.join(" · "),
+            (a.x + b.x) / 2,
+            (a.y + b.y) / 2 + 3 / zm,
+            bad ? "rgba(255,122,110,0.95)" : trColor ? `${trColor}ee` : "rgba(216,219,226,0.9)",
+            `bold ${9 / zm}px ui-monospace, monospace`,
+            "center",
+            lit || isHoverEdge,
+            zm,
+          );
           ctx.textAlign = "start";
         }
       }
@@ -1311,28 +1355,44 @@ export default function Topology({
           (lit && focusApp !== null) ||
           (!isInfraNode(n) && (!denseView || n.degree >= 6 || zm > 1.1)) ||
           zm > 1.8;
+        // Outline every label in the focused branch (the hovered/selected
+        // node and its lit neighbors), not just the node under the cursor.
+        // A clicked edge counts as a focus too: focusApp stays null then, so
+        // its endpoints would otherwise lose the outline.
+        const outlineNode = (focusApp !== null || sel?.kind === "edge") && lit;
+        const fpx = (n.kind === "group" ? 13 : 12) / Math.max(zm, 0.8);
         if (showLabel) {
-          ctx.fillStyle = lit ? "#d8dbe2" : "rgba(216,219,226,0.5)";
+          const color = lit ? "#d8dbe2" : "rgba(216,219,226,0.5)";
           if (n.parked) {
             // Parking list: label sits beside the dot, left-aligned.
-            ctx.font = `12px ui-monospace, monospace`;
-            ctx.textAlign = "left";
-            ctx.fillText(n.app, n.x + r + 7, n.y + 4);
+            drawLabel(ctx, n.app, n.x + r + 7, n.y + 4, color, "12px ui-monospace, monospace", "left", outlineNode, zm);
           } else {
-            ctx.font = `${(n.kind === "group" ? 13 : 12) / Math.max(zm, 0.8)}px ui-monospace, monospace`;
-            ctx.textAlign = "center";
             const label =
               n.kind === "group" && (n.members ?? 0) > 0 ? `${n.app} · ${n.members}` : n.app;
-            ctx.fillText(label, n.x, n.y + r + 14 / Math.max(zm, 0.8));
+            drawLabel(
+              ctx,
+              label,
+              n.x,
+              n.y + r + 14 / Math.max(zm, 0.8),
+              color,
+              `${fpx}px ui-monospace, monospace`,
+              "center",
+              outlineNode,
+              zm,
+            );
           }
         }
         if (bad) {
-          ctx.fillStyle = lit ? "rgba(255,122,110,0.95)" : "rgba(255,122,110,0.4)";
-          ctx.font = `${10 / Math.max(zm, 0.8)}px ui-monospace, monospace`;
-          ctx.fillText(
+          drawLabel(
+            ctx,
             `${(errRate * 100).toFixed(0)}% err`,
             n.x,
             n.y + r + 26 / Math.max(zm, 0.8),
+            lit ? "rgba(255,122,110,0.95)" : "rgba(255,122,110,0.4)",
+            `${10 / Math.max(zm, 0.8)}px ui-monospace, monospace`,
+            "center",
+            outlineNode,
+            zm,
           );
         }
         ctx.textAlign = "start";
@@ -1431,8 +1491,10 @@ export default function Topology({
     const { x, y } = toWorld(ev.clientX, ev.clientY);
     const n = hitNode(x, y);
     hoverRef.current = n ? n.app : null;
+    const he = n ? null : hitEdge(x, y);
+    edgeHoverRef.current = he ? { src: he.src, dst: he.dst } : null;
     const canvas = canvasRef.current;
-    if (canvas) canvas.style.cursor = n || hitEdge(x, y) ? "pointer" : "grab";
+    if (canvas) canvas.style.cursor = n || he ? "pointer" : "grab";
   }
 
   function onMouseUp(ev: React.MouseEvent) {
@@ -1865,6 +1927,32 @@ export default function Topology({
   return (
     <div className="topo">
       <div className="topo-bar">
+        <span className="topo-search">
+          <SearchInput
+            placeholder="grep service…"
+            value={search}
+            onValueChange={updateSuggest}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") jumpTo(suggest[0]?.app ?? search);
+              if (e.key === "Escape") {
+                setSearch("");
+                setSuggest([]);
+              }
+            }}
+            width={240}
+          />
+          {suggest.length > 0 && (
+            <div className="topo-suggest">
+              {suggest.map((n) => (
+                <div key={n.app} className="topo-suggest-row" onClick={() => jumpTo(n.app)}>
+                  <span className="topo-legend-dot" style={{ background: nodeColor(n) }} />
+                  <span className="topo-suggest-name">{n.app}</span>
+                  <span className="muted">{n.group}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </span>
         {grouping !== null && rawRef.current.nodes.length > 30 && (
           <>
             <ToggleGroup
@@ -1924,88 +2012,8 @@ export default function Topology({
             )}
           </>
         )}
-        {(() => {
-          // Planes beyond the business domain (dc, provider…) from labels.
-          const keys = [
-            ...new Set(rawRef.current.nodes.flatMap((n) => Object.keys(n.labels ?? {}))),
-          ].sort();
-          if (keys.length === 0) return null;
-          const vals =
-            plane === "domain"
-              ? []
-              : [
-                  ...new Set(
-                    rawRef.current.nodes.flatMap((n) =>
-                      (n.labels?.[plane] ?? "")
-                        .split("/")
-                        .map((s) => s.trim())
-                        .filter(Boolean),
-                    ),
-                  ),
-                ].sort();
-          return (
-            <>
-              <span className="sect">{"// plane"}</span>
-              <ToggleGroup
-                type="single"
-                variant="outlined"
-                color="secondary"
-                size="sm"
-                value={plane}
-                onChange={(k) => {
-                  if (!k) return;
-                  setPlane(k);
-                  setExpanded(null);
-                  setFocus(null);
-                  setSelection(null);
-                }}
-                items={["domain", ...keys].map((k) => ({ value: k, label: k }))}
-              />
-              {vals.length > 0 && (
-                <>
-                  <span className="sect">{"// outage"}</span>
-                  {vals.map((v) => {
-                    const on = sim?.key === plane && sim.val === v;
-                    return on ? (
-                      <Button
-                        key={v}
-                        variant="solid"
-                        color="danger"
-                        size="sm"
-                        prefix={<Skull size="sm" />}
-                        onClick={() => setSim(null)}
-                      >
-                        {v}
-                      </Button>
-                    ) : (
-                      <Button
-                        key={v}
-                        variant="outlined"
-                        color="secondary"
-                        size="sm"
-                        onClick={() => setSim({ key: plane, val: v })}
-                      >
-                        {v}
-                      </Button>
-                    );
-                  })}
-                </>
-              )}
-            </>
-          );
-        })()}
         {!VIEWER && (
           <>
-            <span className="sect">{"// window"}</span>
-            <ToggleGroup
-              type="single"
-              variant="outlined"
-              color="secondary"
-              size="sm"
-              value={win}
-              onChange={(v) => v && setWin(v)}
-              items={WINDOWS.map((v) => ({ value: v, label: v }))}
-            />
             <Button
               variant={showChanges ? "outlined" : "ghost"}
               color="secondary"
@@ -2106,6 +2114,125 @@ export default function Topology({
           </>
         )}
       </div>
+      <div className="filter-row">
+        {!VIEWER && (
+          <>
+            <span className="sect">{"// window"}</span>
+            <ToggleGroup
+              type="single"
+              variant="outlined"
+              color="secondary"
+              size="sm"
+              value={win}
+              onChange={(v) => v && setWin(v)}
+              items={WINDOWS.map((v) => ({ value: v, label: v }))}
+            />
+          </>
+        )}
+        {(() => {
+          // Planes beyond the business domain (dc, provider…) from labels.
+          const keys = [
+            ...new Set(rawRef.current.nodes.flatMap((n) => Object.keys(n.labels ?? {}))),
+          ].sort();
+          if (keys.length === 0) return null;
+          const vals =
+            plane === "domain"
+              ? []
+              : [
+                  ...new Set(
+                    rawRef.current.nodes.flatMap((n) =>
+                      (n.labels?.[plane] ?? "")
+                        .split("/")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    ),
+                  ),
+                ].sort();
+          return (
+            <>
+              <span className="sect">{"// plane"}</span>
+              <ToggleGroup
+                type="single"
+                variant="outlined"
+                color="secondary"
+                size="sm"
+                value={plane}
+                onChange={(k) => {
+                  if (!k) return;
+                  setPlane(k);
+                  setExpanded(null);
+                  setFocus(null);
+                  setSelection(null);
+                }}
+                items={["domain", ...keys].map((k) => ({ value: k, label: k }))}
+              />
+              {vals.length > 0 && (
+                <>
+                  <span className="sect">{"// outage"}</span>
+                  {vals.map((v) => {
+                    const on = sim?.key === plane && sim.val === v;
+                    return on ? (
+                      <Button
+                        key={v}
+                        variant="solid"
+                        color="danger"
+                        size="sm"
+                        prefix={<Skull size="sm" />}
+                        onClick={() => setSim(null)}
+                      >
+                        {v}
+                      </Button>
+                    ) : (
+                      <Button
+                        key={v}
+                        variant="outlined"
+                        color="secondary"
+                        size="sm"
+                        onClick={() => setSim({ key: plane, val: v })}
+                      >
+                        {v}
+                      </Button>
+                    );
+                  })}
+                </>
+              )}
+            </>
+          );
+        })()}
+      </div>
+      <div className="filter-row">
+        <span className="sect">{"// node type"}</span>
+        {(() => {
+          const counts = new Map<string, number>();
+          for (const n of rawRef.current.nodes) {
+            const c = isInfraNode(n) ? (n.group as string) : "service";
+            counts.set(c, (counts.get(c) ?? 0) + 1);
+          }
+          return ["service", ...Object.keys(CAT_COLORS)]
+            .filter((c) => (counts.get(c) ?? 0) > 0)
+            .map((c) => {
+              const off = hiddenCats.includes(c);
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  className="type-toggle"
+                  aria-pressed={!off}
+                  onClick={() =>
+                    setHiddenCats((prev) => (off ? prev.filter((x) => x !== c) : [...prev, c]))
+                  }
+                >
+                  <span
+                    className="topo-legend-dot"
+                    style={{ background: c === "service" ? ACCENT : CAT_COLORS[c] }}
+                  />
+                  {c}
+                  <span className="type-toggle-cnt">{counts.get(c)}</span>
+                </button>
+              );
+            });
+        })()}
+      </div>
       {error && <Callout type="error" title={error} />}
       <div className="topo-body">
         <canvas
@@ -2117,6 +2244,7 @@ export default function Topology({
           onMouseLeave={() => {
             dragRef.current = null;
             hoverRef.current = null;
+            edgeHoverRef.current = null;
           }}
           onWheel={onWheel}
           onDoubleClick={onDoubleClick}
@@ -2131,540 +2259,489 @@ export default function Topology({
           </div>
         )}
 
-        {simSets && sim && (
-          <div className="topo-panel topo-changes">
-            <div className="topo-title">
-              <Skull size="md" /> {sim.key} «{sim.val}» down
-              <span className="topo-panel-close">
-                <Button variant="ghost" color="secondary" size="sm" icon aria-label="Stop simulation" onClick={() => setSim(null)}>
-                  <X size="sm" />
-                </Button>
-              </span>
-            </div>
-            <div className="kv">
-              <span>down completely</span>
-              <b className="bad">{simSets.dead.size}</b>
-            </div>
-            <div className="kv">
-              <span>die in cascade</span>
-              <b className="bad">{simSets.casc.size}</b>
-            </div>
-            <div className="kv">
-              <span>degraded (multi-{sim.key})</span>
-              <b className="stale">{simSets.degraded.size}</b>
-            </div>
-            {simSets.dead.size > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">lived only in “{sim.val}” — down</div>
-                {[...simSets.dead].sort().map((a) => (
-                  <div key={a} className="topo-link" onClick={() => jumpTo(a)}>
-                    <span className="bad">✖</span> {a}
-                  </div>
-                ))}
+        <DrawerWrapper
+          {...SIDE_DRAWER}
+          direction="left"
+          open={!!(simSets && sim)}
+          onOpenChange={(open) => !open && setSim(null)}
+          title={sim ? `${sim.key} «${sim.val}» down` : ""}
+          subTitle="outage simulation"
+        >
+          {simSets && sim && (
+            <>
+              <div className="kv">
+                <span>down completely</span>
+                <b className="bad">{simSets.dead.size}</b>
               </div>
-            )}
-            {simSets.casc.size > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">die in cascade — sync-depend on the dead</div>
-                {[...simSets.casc].sort().map((a) => (
-                  <div key={a} className="topo-link" onClick={() => jumpTo(a)}>
-                    <span className="bad">⋯</span> {a}
-                  </div>
-                ))}
+              <div className="kv">
+                <span>die in cascade</span>
+                <b className="bad">{simSets.casc.size}</b>
               </div>
-            )}
-            {simSets.degraded.size > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">lost a node, still alive (multi-{sim.key})</div>
-                {[...simSets.degraded].sort().map((a) => (
-                  <div key={a} className="topo-link" onClick={() => jumpTo(a)}>
-                    <span className="stale">◔</span> {a}
-                  </div>
-                ))}
+              <div className="kv">
+                <span>degraded (multi-{sim.key})</span>
+                <b className="stale">{simSets.degraded.size}</b>
               </div>
-            )}
-          </div>
-        )}
-        {showChanges && diff && (
-          <div className="topo-panel topo-changes">
-            <div className="topo-title">
-              changed <span className="muted">· last {win} vs the {win} before</span>
-            </div>
-            {diff.new_services.length === 0 &&
-              diff.silent_services.length === 0 &&
-              diff.new_edges.length === 0 &&
-              diff.silent_edges.length === 0 &&
-              diff.error_jumps.length === 0 &&
-              diff.deploys.length === 0 && <div className="muted">nothing changed</div>}
-            {diff.error_jumps.length > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">error jumps</div>
-                {diff.error_jumps.map((j) => (
-                  <div
-                    key={`${j.src}→${j.dst}`}
-                    className="topo-link"
-                    onClick={() => setSelection({ kind: "edge", src: j.src, dst: j.dst })}
-                  >
-                    {j.src} → {j.dst}
-                    <span className="bad">
-                      {" "}
-                      {(j.prev_error_rate * 100).toFixed(1)}% → {(j.cur_error_rate * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {diff.deploys.length > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">deploys</div>
-                {diff.deploys.map((d) => (
-                  <div
-                    key={`${d.app}-${d.version}-${d.ts}`}
-                    className="topo-link"
-                    onClick={() => setSelection({ kind: "node", app: d.app })}
-                  >
-                    {d.app} <span className="accent">{d.version}</span>
-                    <span className="muted"> {new Date(d.ts).toLocaleTimeString()}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {diff.new_services.length > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">new services</div>
-                {diff.new_services.map((n) => (
-                  <div
-                    key={n.app}
-                    className="topo-link"
-                    onClick={() => setSelection({ kind: "node", app: n.app })}
-                  >
-                    {n.app}
-                  </div>
-                ))}
-              </div>
-            )}
-            {diff.silent_services.length > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">went silent</div>
-                {diff.silent_services.map((n) => (
-                  <div key={n.app} className="topo-link">
-                    {n.app}
-                    <span className="muted"> last {new Date(n.last_seen).toLocaleTimeString()}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {diff.new_edges.length > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">new links</div>
-                {diff.new_edges.map((e) => (
-                  <div
-                    key={`${e.src}→${e.dst}`}
-                    className="topo-link"
-                    onClick={() => setSelection({ kind: "edge", src: e.src, dst: e.dst })}
-                  >
-                    {e.src} → {e.dst}
-                  </div>
-                ))}
-              </div>
-            )}
-            {diff.silent_edges.length > 0 && (
-              <div className="topo-changes-sec">
-                <div className="muted">silent links</div>
-                {diff.silent_edges.map((e) => (
-                  <div key={`${e.src}→${e.dst}`} className="topo-link">
-                    {e.src} → {e.dst}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+              {simSets.dead.size > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">lived only in “{sim.val}” — down</div>
+                  {[...simSets.dead].sort().map((a) => (
+                    <div key={a} className="topo-link" onClick={() => jumpTo(a)}>
+                      <span className="bad">✖</span> {a}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {simSets.casc.size > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">die in cascade — sync-depend on the dead</div>
+                  {[...simSets.casc].sort().map((a) => (
+                    <div key={a} className="topo-link" onClick={() => jumpTo(a)}>
+                      <span className="bad">⋯</span> {a}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {simSets.degraded.size > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">lost a node, still alive (multi-{sim.key})</div>
+                  {[...simSets.degraded].sort().map((a) => (
+                    <div key={a} className="topo-link" onClick={() => jumpTo(a)}>
+                      <span className="stale">◔</span> {a}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </DrawerWrapper>
+        <DrawerWrapper
+          {...SIDE_DRAWER}
+          direction="left"
+          open={showChanges && !!diff && !(simSets && sim)}
+          onOpenChange={(open) => !open && setShowChanges(false)}
+          title="Changes"
+          subTitle={`last ${win} vs the ${win} before`}
+        >
+          {diff && (
+            <>
+              {diff.new_services.length === 0 &&
+                diff.silent_services.length === 0 &&
+                diff.new_edges.length === 0 &&
+                diff.silent_edges.length === 0 &&
+                diff.error_jumps.length === 0 &&
+                diff.deploys.length === 0 && <div className="muted">nothing changed</div>}
+              {diff.error_jumps.length > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">error jumps</div>
+                  {diff.error_jumps.map((j) => (
+                    <div
+                      key={`${j.src}→${j.dst}`}
+                      className="topo-link"
+                      onClick={() => setSelection({ kind: "edge", src: j.src, dst: j.dst })}
+                    >
+                      {j.src} → {j.dst}
+                      <span className="bad">
+                        {" "}
+                        {(j.prev_error_rate * 100).toFixed(1)}% → {(j.cur_error_rate * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {diff.deploys.length > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">deploys</div>
+                  {diff.deploys.map((d) => (
+                    <div
+                      key={`${d.app}-${d.version}-${d.ts}`}
+                      className="topo-link"
+                      onClick={() => setSelection({ kind: "node", app: d.app })}
+                    >
+                      {d.app} <span className="accent">{d.version}</span>
+                      <span className="muted"> {new Date(d.ts).toLocaleTimeString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {diff.new_services.length > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">new services</div>
+                  {diff.new_services.map((n) => (
+                    <div
+                      key={n.app}
+                      className="topo-link"
+                      onClick={() => setSelection({ kind: "node", app: n.app })}
+                    >
+                      {n.app}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {diff.silent_services.length > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">went silent</div>
+                  {diff.silent_services.map((n) => (
+                    <div key={n.app} className="topo-link">
+                      {n.app}
+                      <span className="muted"> last {new Date(n.last_seen).toLocaleTimeString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {diff.new_edges.length > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">new links</div>
+                  {diff.new_edges.map((e) => (
+                    <div
+                      key={`${e.src}→${e.dst}`}
+                      className="topo-link"
+                      onClick={() => setSelection({ kind: "edge", src: e.src, dst: e.dst })}
+                    >
+                      {e.src} → {e.dst}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {diff.silent_edges.length > 0 && (
+                <div className="topo-changes-sec">
+                  <div className="muted">silent links</div>
+                  {diff.silent_edges.map((e) => (
+                    <div key={`${e.src}→${e.dst}`} className="topo-link">
+                      {e.src} → {e.dst}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </DrawerWrapper>
 
-        {selNode && selNode.kind !== "group" && (
-          <div className="topo-panel">
-            <div className="topo-title">{selNode.app}</div>
-            {!metaForm && (
-              <div className="card-tabs">
-                <Tabs
-                  variant="secondary"
-                  orientation="horizontal"
-                  alignment="start"
-                  value={cardTab}
-                  onChange={(k) => setCardTab(k as typeof cardTab)}
-                  items={[
-                    { key: "info", label: "Info", children: null },
-                    { key: "impact", label: "Impact", prefixIcon: <Zap size="sm" />, children: null },
-                  ]}
-                />
-              </div>
-            )}
-            {(cardTab === "info" || !!metaForm) && !metaForm && (cardDesc || declaredWarns.length > 0 || selMeta?.tags?.length) && (
-              <div className="topo-meta">
-                {cardDesc && <div className="topo-desc">{emph(cardDesc)}</div>}
-                {extraDesc && <div className="topo-desc muted">{emph(extraDesc)}</div>}
-                {declaredWarns.map((wl) => (
-                  <div key={wl} className="topo-warn">
-                    {wl}
-                  </div>
-                ))}
-                {(selMeta?.tags?.length ?? 0) > 0 && (
-                  <div className="topo-tags">
-                    {selMeta!.tags!.map((t) => (
-                      <Badge key={t} variant="outlined" color="secondary">
-                        {t}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {metaForm && (
-              <div className="topo-meta-form">
-                <Input
-                  placeholder="owner (team or person)"
-                  value={metaForm.owner}
-                  onChange={(e) => setMetaForm({ ...metaForm, owner: e.target.value })}
-                />
-                <textarea
-                  className="textarea"
-                  placeholder="description"
-                  rows={2}
-                  value={metaForm.description}
-                  onChange={(e) => setMetaForm({ ...metaForm, description: e.target.value })}
-                />
-                <textarea
-                  className="textarea"
-                  placeholder={"links, one per line:\nrepo https://github.com/org/app"}
-                  rows={3}
-                  value={metaForm.links}
-                  onChange={(e) => setMetaForm({ ...metaForm, links: e.target.value })}
-                />
-                <Input
-                  placeholder="tags, comma-separated"
-                  value={metaForm.tags}
-                  onChange={(e) => setMetaForm({ ...metaForm, tags: e.target.value })}
-                />
-                {metaForm.error && <Callout type="error" title={metaForm.error} />}
-                <div className="topo-actions">
-                  <Button variant="solid" color="primary" size="sm" onClick={saveMeta}>
-                    Save
-                  </Button>
-                  <Button variant="ghost" color="secondary" size="sm" onClick={() => setMetaForm(null)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-            {cardTab === "info" && (cardOwner || selNode.group || declaredKV.length > 0) && (
-              <div className="topo-sec">
-                {cardOwner && (
-                  <div className="kv">
-                    <span>owner</span>
-                    <b>{cardOwner}</b>
-                  </div>
-                )}
-                {selNode.group && (
-                  <div className="kv">
-                    <span>domain</span>
-                    <b>{selNode.group}</b>
-                  </div>
-                )}
-                {declaredKV
-                  .filter(([k]) => k !== "owner")
-                  .map(([k, v]) => (
-                    <div key={k} className="kv">
-                      <span>{k}</span>
-                      <b>{v}</b>
-                    </div>
-                  ))}
-                {Object.entries(selNode.labels ?? {})
-                  .filter(([k]) => !declaredKV.some(([dk]) => dk === k))
-                  .map(([k, v]) => (
-                    <div key={`lbl-${k}`} className="kv">
-                      <span>{k}</span>
-                      <b>{v}</b>
-                    </div>
-                  ))}
-              </div>
-            )}
-            {cardTab === "info" && selNode.declared_only && (
-              <div className="muted topo-meta-note">declared in code · no logs yet</div>
-            )}
-            {cardTab === "info" && !selNode.declared_only && (
-              <div className="topo-sec">
-                <div className="topo-sec-title">traffic · {win}</div>
-                <div className="kv">
-                  <span>entries</span>
-                  <b>{selNode.count.toLocaleString()}</b>
-                </div>
-                <div className="kv">
-                  <span>errors</span>
-                  <b className={selNode.errors > 0 ? "bad" : ""}>
-                    {selNode.errors.toLocaleString()}
-                  </b>
-                </div>
-                <div className="kv">
-                  <span>first seen</span>
-                  <b>{new Date(selNode.first_seen).toLocaleString()}</b>
-                </div>
-                <div className="kv">
-                  <span>last seen</span>
-                  <b>{new Date(selNode.last_seen).toLocaleString()}</b>
-                </div>
-              </div>
-            )}
-            {cardTab === "info" && !metaForm && Object.keys(selMeta?.links ?? {}).length > 0 && (
-              <div className="topo-sec">
-                <div className="topo-sec-title">links</div>
-                {Object.entries(selMeta!.links!).map(([name, url]) => (
-                  <a key={name} href={url} target="_blank" rel="noreferrer" className="topo-link topo-ext-link">
-                    {name}
-                  </a>
-                ))}
-              </div>
-            )}
-            {cardTab === "info" && deploys.length > 0 && (
-              <div className="topo-sec">
-                <div className="topo-sec-title">deploys · 24h</div>
-                {deploys.map((d) => (
-                  <div key={`${d.version}-${d.ts}`} className="kv">
-                    <span className="accent">{d.version}</span>
-                    <b>{new Date(d.ts).toLocaleTimeString()}</b>
-                  </div>
-                ))}
-              </div>
-            )}
-            {cardTab === "info" && (depsOut.length > 0 || depsIn.length > 0) && (
-              <div className="topo-sec">
-                {depsOut.length > 0 && (
+        <DrawerWrapper
+          {...SIDE_DRAWER}
+          open={!!selNode && selNode.kind !== "group"}
+          onOpenChange={(open) => !open && setSelection(null)}
+          title={selNode?.app ?? ""}
+          subTitle={selNode?.group}
+          footer={
+            selNode ? (
+              <div className="topo-actions">
+                {!VIEWER && (
                   <>
-                    <div className="topo-sec-title">calls → · {depsOut.length}</div>
-                    {depsOut.map((e) => depRow(e, e.dst))}
+                    <Button
+                      variant="solid"
+                      color="primary"
+                      size="sm"
+                      prefix={<ScrollText size="sm" />}
+                      onClick={() => onOpenLogs(selNode.app, false)}
+                    >
+                      Logs
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="sm"
+                      prefix={<Play size="sm" />}
+                      onClick={() => onOpenLogs(selNode.app, true)}
+                    >
+                      Live tail
+                    </Button>
                   </>
                 )}
-                {depsIn.length > 0 && (
-                  <>
-                    <div className="topo-sec-title">← called by · {depsIn.length}</div>
-                    {depsIn.map((e) => depRow(e, e.src))}
-                  </>
+                {focus !== selNode.app && (
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="sm"
+                    prefix={<Crosshair size="sm" />}
+                    onClick={() => setFocus(selNode.app)}
+                  >
+                    Focus
+                  </Button>
+                )}
+                {canEdit && !metaForm && selMeta?.source !== "config" && (
+                  <Button variant="ghost" color="secondary" size="sm" icon aria-label="Edit catalog entry" onClick={openMetaForm}>
+                    <Pencil size="sm" />
+                  </Button>
                 )}
               </div>
-            )}
-            {cardTab === "impact" && !metaForm && impact && (
-              <div className="topo-impact">
-                <div className="topo-sec">
-                  <div className="topo-sec-title">
-                    if {selNode.app} goes down · {impact.affected} affected
-                  </div>
-                  <div className="muted topo-impact-note">
-                    painted on the map: red ring = fails · amber = data stales · blue = what
-                    this service itself needs
-                  </div>
+            ) : undefined
+          }
+        >
+          {selNode && selNode.kind !== "group" && (
+            <>
+              {!metaForm && (
+                <div className="card-tabs">
+                  <Tabs
+                    variant="secondary"
+                    orientation="horizontal"
+                    alignment="start"
+                    value={cardTab}
+                    onChange={(k) => setCardTab(k as typeof cardTab)}
+                    items={[
+                      { key: "info", label: "Info", children: null },
+                      { key: "impact", label: "Impact", prefixIcon: <Zap size="sm" />, children: null },
+                    ]}
+                  />
+                </div>
+              )}
+              {(cardTab === "info" || !!metaForm) && !metaForm && (cardDesc || declaredWarns.length > 0 || selMeta?.tags?.length) && (
+                <div className="topo-meta">
+                  {cardDesc && <div className="topo-desc">{emph(cardDesc)}</div>}
+                  {extraDesc && <div className="topo-desc muted">{emph(extraDesc)}</div>}
                   {declaredWarns.map((wl) => (
                     <div key={wl} className="topo-warn">
                       {wl}
                     </div>
                   ))}
-                  {impact.syncCallers.length === 0 && impact.staleConsumers.length === 0 && (
-                    <div className="muted topo-meta-note">
-                      no synchronous dependents — nothing breaks instantly. Likely a terminal
-                      worker/consumer: when it stops, whatever it writes (storage, analytics)
-                      quietly goes stale.
+                  {(selMeta?.tags?.length ?? 0) > 0 && (
+                    <div className="topo-tags">
+                      {selMeta!.tags!.map((t) => (
+                        <Badge key={t} variant="outlined" color="secondary">
+                          {t}
+                        </Badge>
+                      ))}
                     </div>
                   )}
                 </div>
-                {impact.syncCallers.length > 0 && (
-                  <div className="topo-sec">
-                    <div className="topo-sec-title">
-                      ✖ fail immediately · {impact.syncCallers.length}
+              )}
+              {metaForm && (
+                <div className="topo-meta-form">
+                  <Input
+                    placeholder="owner (team or person)"
+                    value={metaForm.owner}
+                    onChange={(e) => setMetaForm({ ...metaForm, owner: e.target.value })}
+                  />
+                  <textarea
+                    className="textarea"
+                    placeholder="description"
+                    rows={2}
+                    value={metaForm.description}
+                    onChange={(e) => setMetaForm({ ...metaForm, description: e.target.value })}
+                  />
+                  <textarea
+                    className="textarea"
+                    placeholder={"links, one per line:\nrepo https://github.com/org/app"}
+                    rows={3}
+                    value={metaForm.links}
+                    onChange={(e) => setMetaForm({ ...metaForm, links: e.target.value })}
+                  />
+                  <Input
+                    placeholder="tags, comma-separated"
+                    value={metaForm.tags}
+                    onChange={(e) => setMetaForm({ ...metaForm, tags: e.target.value })}
+                  />
+                  {metaForm.error && <Callout type="error" title={metaForm.error} />}
+                  <div className="topo-actions">
+                    <Button variant="solid" color="primary" size="sm" onClick={saveMeta}>
+                      Save
+                    </Button>
+                    <Button variant="ghost" color="secondary" size="sm" onClick={() => setMetaForm(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {cardTab === "info" && (cardOwner || selNode.group || declaredKV.length > 0) && (
+                <div className="topo-sec">
+                  {cardOwner && (
+                    <div className="kv">
+                      <span>owner</span>
+                      <b>{cardOwner}</b>
                     </div>
-                    <div className="muted topo-impact-note">
-                      call it synchronously — requests start erroring
+                  )}
+                  {selNode.group && (
+                    <div className="kv">
+                      <span>domain</span>
+                      <b>{selNode.group}</b>
                     </div>
-                    {impact.syncCallers.map((c) => (
-                      <div key={c.app} className="topo-link topo-dep" onClick={() => jumpTo(c.app)}>
-                        <span className="topo-legend-dot dot-bad" />
-                        <span className="topo-dep-name">{c.app}</span>
-                        <span className="muted topo-dep-meta">{c.tr}</span>
+                  )}
+                  {declaredKV
+                    .filter(([k]) => k !== "owner")
+                    .map(([k, v]) => (
+                      <div key={k} className="kv">
+                        <span>{k}</span>
+                        <b>{v}</b>
                       </div>
                     ))}
-                    {impact.cascade.length > 0 && (
-                      <div className="muted topo-impact-note">
-                        …and up the call chain: {impact.cascade.join(", ")}
+                  {Object.entries(selNode.labels ?? {})
+                    .filter(([k]) => !declaredKV.some(([dk]) => dk === k))
+                    .map(([k, v]) => (
+                      <div key={`lbl-${k}`} className="kv">
+                        <span>{k}</span>
+                        <b>{v}</b>
+                      </div>
+                    ))}
+                </div>
+              )}
+              {cardTab === "info" && selNode.declared_only && (
+                <div className="muted topo-meta-note">declared in code · no logs yet</div>
+              )}
+              {cardTab === "info" && !selNode.declared_only && (
+                <div className="topo-sec">
+                  <div className="topo-sec-title">traffic · {win}</div>
+                  <div className="kv">
+                    <span>entries</span>
+                    <b>{selNode.count.toLocaleString()}</b>
+                  </div>
+                  <div className="kv">
+                    <span>errors</span>
+                    <b className={selNode.errors > 0 ? "bad" : ""}>
+                      {selNode.errors.toLocaleString()}
+                    </b>
+                  </div>
+                  <div className="kv">
+                    <span>first seen</span>
+                    <b>{new Date(selNode.first_seen).toLocaleString()}</b>
+                  </div>
+                  <div className="kv">
+                    <span>last seen</span>
+                    <b>{new Date(selNode.last_seen).toLocaleString()}</b>
+                  </div>
+                </div>
+              )}
+              {cardTab === "info" && !metaForm && Object.keys(selMeta?.links ?? {}).length > 0 && (
+                <div className="topo-sec">
+                  <div className="topo-sec-title">links</div>
+                  {Object.entries(selMeta!.links!).map(([name, url]) => (
+                    <a key={name} href={url} target="_blank" rel="noreferrer" className="topo-link topo-ext-link">
+                      {name}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {cardTab === "info" && deploys.length > 0 && (
+                <div className="topo-sec">
+                  <div className="topo-sec-title">deploys · 24h</div>
+                  {deploys.map((d) => (
+                    <div key={`${d.version}-${d.ts}`} className="kv">
+                      <span className="accent">{d.version}</span>
+                      <b>{new Date(d.ts).toLocaleTimeString()}</b>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {cardTab === "info" && (depsOut.length > 0 || depsIn.length > 0) && (
+                <div className="topo-sec">
+                  {depsOut.length > 0 && (
+                    <>
+                      <div className="topo-sec-title">calls → · {depsOut.length}</div>
+                      {depsOut.map((e) => depRow(e, e.dst))}
+                    </>
+                  )}
+                  {depsIn.length > 0 && (
+                    <>
+                      <div className="topo-sec-title">← called by · {depsIn.length}</div>
+                      {depsIn.map((e) => depRow(e, e.src))}
+                    </>
+                  )}
+                </div>
+              )}
+              {cardTab === "impact" && !metaForm && impact && (
+                <div className="topo-impact">
+                  <div className="topo-sec">
+                    <div className="topo-sec-title">
+                      if {selNode.app} goes down · {impact.affected} affected
+                    </div>
+                    <div className="muted topo-impact-note">
+                      painted on the map: red ring = fails · amber = data stales · blue = what
+                      this service itself needs
+                    </div>
+                    {declaredWarns.map((wl) => (
+                      <div key={wl} className="topo-warn">
+                        {wl}
+                      </div>
+                    ))}
+                    {impact.syncCallers.length === 0 && impact.staleConsumers.length === 0 && (
+                      <div className="muted topo-meta-note">
+                        no synchronous dependents — nothing breaks instantly. Likely a terminal
+                        worker/consumer: when it stops, whatever it writes (storage, analytics)
+                        quietly goes stale.
                       </div>
                     )}
                   </div>
-                )}
-                {impact.staleConsumers.length > 0 && (
-                  <div className="topo-sec">
-                    <div className="topo-sec-title">
-                      ◔ data goes stale · {impact.staleConsumers.length}
-                    </div>
-                    <div className="muted topo-impact-note">
-                      async flows — no outage, but their data stops updating
-                    </div>
-                    {impact.staleConsumers.map((a) => (
-                      <div key={a} className="topo-link topo-dep" onClick={() => jumpTo(a)}>
-                        <span className="topo-legend-dot dot-stale" />
-                        <span className="topo-dep-name">{a}</span>
-                        <span className="muted topo-dep-meta">kafka</span>
+                  {impact.syncCallers.length > 0 && (
+                    <div className="topo-sec">
+                      <div className="topo-sec-title">
+                        ✖ fail immediately · {impact.syncCallers.length}
                       </div>
-                    ))}
-                  </div>
-                )}
-                {impact.topics.length > 0 && (
-                  <div className="topo-sec">
-                    <div className="topo-sec-title">≋ shared topics · {impact.topics.length}</div>
-                    <div className="muted topo-impact-note">
-                      works with {impact.topics.join(", ")}. The graph can't tell producer from
-                      consumer here — IF this service is the producer, topic consumers go
-                      stale{impact.topicPeers.length > 0
-                        ? `: ${impact.topicPeers.join(", ")}`
-                        : ""}.
-                    </div>
-                  </div>
-                )}
-                {impact.syncDeps.length > 0 && (
-                  <div className="topo-sec">
-                    <div className="topo-sec-title">
-                      ⚑ this service dies if · {impact.syncDeps.length}
-                    </div>
-                    <div className="muted topo-impact-note">
-                      its own hard sync dependencies
-                    </div>
-                    {impact.syncDeps.map((c) => (
-                      <div key={c.app} className="topo-link topo-dep" onClick={() => jumpTo(c.app)}>
-                        <span
-                          className="topo-legend-dot"
-                          style={{
-                            background: nodesRef.current.get(c.app)
-                              ? nodeColor(nodesRef.current.get(c.app)!)
-                              : "#8b8992",
-                          }}
-                        />
-                        <span className="topo-dep-name">{c.app}</span>
-                        <span className="muted topo-dep-meta">{c.tr}</span>
+                      <div className="muted topo-impact-note">
+                        call it synchronously — requests start erroring
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="topo-actions">
-              {!VIEWER && (
-                <>
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    size="sm"
-                    prefix={<ScrollText size="sm" />}
-                    onClick={() => onOpenLogs(selNode.app, false)}
-                  >
-                    Logs
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    size="sm"
-                    prefix={<Play size="sm" />}
-                    onClick={() => onOpenLogs(selNode.app, true)}
-                  >
-                    Live tail
-                  </Button>
-                </>
-              )}
-              {focus !== selNode.app && (
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  size="sm"
-                  prefix={<Crosshair size="sm" />}
-                  onClick={() => setFocus(selNode.app)}
-                >
-                  Focus
-                </Button>
-              )}
-              {canEdit && !metaForm && selMeta?.source !== "config" && (
-                <Button variant="ghost" color="secondary" size="sm" icon aria-label="Edit catalog entry" onClick={openMetaForm}>
-                  <Pencil size="sm" />
-                </Button>
-              )}
-            </div>
-            {selMeta?.source === "config" && (
-              <div className="muted topo-meta-note">defined in logdoc.yml</div>
-            )}
-          </div>
-        )}
-
-        {rawRef.current.nodes.length > 30 && (
-          <div className="topo-side">
-            <SearchInput
-              placeholder="grep service…"
-              value={search}
-              onValueChange={updateSuggest}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") jumpTo(suggest[0]?.app ?? search);
-                if (e.key === "Escape") {
-                  setSearch("");
-                  setSuggest([]);
-                }
-              }}
-              width="100%"
-            />
-            {suggest.length > 0 && (
-              <div className="topo-suggest">
-                {suggest.map((n) => (
-                  <div key={n.app} className="topo-suggest-row" onClick={() => jumpTo(n.app)}>
-                    <span className="topo-legend-dot" style={{ background: nodeColor(n) }} />
-                    <span className="topo-suggest-name">{n.app}</span>
-                    <span className="muted">{n.group}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="topo-side-title">// node type</div>
-            {(() => {
-              const counts = new Map<string, number>();
-              for (const n of rawRef.current.nodes) {
-                const c = isInfraNode(n) ? (n.group as string) : "service";
-                counts.set(c, (counts.get(c) ?? 0) + 1);
-              }
-              return ["service", ...Object.keys(CAT_COLORS)]
-                .filter((c) => (counts.get(c) ?? 0) > 0)
-                .map((c) => {
-                  const off = hiddenCats.includes(c);
-                  return (
-                    <div key={c} className="topo-legend-row">
-                      <Checkbox
-                        color="primary"
-                        value={!off}
-                        onChange={() =>
-                          setHiddenCats((prev) => (off ? prev.filter((x) => x !== c) : [...prev, c]))
-                        }
-                      >
-                        <span className="topo-legend-label">
+                      {impact.syncCallers.map((c) => (
+                        <div key={c.app} className="topo-link topo-dep" onClick={() => jumpTo(c.app)}>
+                          <span className="topo-legend-dot dot-bad" />
+                          <span className="topo-dep-name">{c.app}</span>
+                          <span className="muted topo-dep-meta">{c.tr}</span>
+                        </div>
+                      ))}
+                      {impact.cascade.length > 0 && (
+                        <div className="muted topo-impact-note">
+                          …and up the call chain: {impact.cascade.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {impact.staleConsumers.length > 0 && (
+                    <div className="topo-sec">
+                      <div className="topo-sec-title">
+                        ◔ data goes stale · {impact.staleConsumers.length}
+                      </div>
+                      <div className="muted topo-impact-note">
+                        async flows — no outage, but their data stops updating
+                      </div>
+                      {impact.staleConsumers.map((a) => (
+                        <div key={a} className="topo-link topo-dep" onClick={() => jumpTo(a)}>
+                          <span className="topo-legend-dot dot-stale" />
+                          <span className="topo-dep-name">{a}</span>
+                          <span className="muted topo-dep-meta">kafka</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {impact.topics.length > 0 && (
+                    <div className="topo-sec">
+                      <div className="topo-sec-title">≋ shared topics · {impact.topics.length}</div>
+                      <div className="muted topo-impact-note">
+                        works with {impact.topics.join(", ")}. The graph can't tell producer from
+                        consumer here — IF this service is the producer, topic consumers go
+                        stale{impact.topicPeers.length > 0
+                          ? `: ${impact.topicPeers.join(", ")}`
+                          : ""}.
+                      </div>
+                    </div>
+                  )}
+                  {impact.syncDeps.length > 0 && (
+                    <div className="topo-sec">
+                      <div className="topo-sec-title">
+                        ⚑ this service dies if · {impact.syncDeps.length}
+                      </div>
+                      <div className="muted topo-impact-note">
+                        its own hard sync dependencies
+                      </div>
+                      {impact.syncDeps.map((c) => (
+                        <div key={c.app} className="topo-link topo-dep" onClick={() => jumpTo(c.app)}>
                           <span
                             className="topo-legend-dot"
-                            style={{ background: c === "service" ? ACCENT : CAT_COLORS[c] }}
+                            style={{
+                              background: nodesRef.current.get(c.app)
+                                ? nodeColor(nodesRef.current.get(c.app)!)
+                                : "#8b8992",
+                            }}
                           />
-                          {c}
-                        </span>
-                      </Checkbox>
-                      <span className="topo-legend-cnt">{counts.get(c)}</span>
+                          <span className="topo-dep-name">{c.app}</span>
+                          <span className="muted topo-dep-meta">{c.tr}</span>
+                        </div>
+                      ))}
                     </div>
-                  );
-                });
-            })()}
-            <div className="topo-side-hint">
-              hover: deps · click: focus
-              <br />
-              dbl-click / esc: reset
-              <br />
-              scroll: zoom · drag: pan
-            </div>
-          </div>
-        )}
+                  )}
+                </div>
+              )}
+              {selMeta?.source === "config" && (
+                <div className="muted topo-meta-note">defined in logdoc.yml</div>
+              )}
+            </>
+          )}
+        </DrawerWrapper>
 
         <div className="topo-zoom" style={{ bottom: tailFor ? tailHeight + 20 : 12 }}>
           <Button
@@ -2751,81 +2828,14 @@ export default function Topology({
           </div>
         )}
 
-        {selEdge && (
-          <div className="topo-panel">
-            <div className="topo-title">
-              {selEdge.src} <span className="accent">→</span> {selEdge.dst}
-            </div>
-            {(() => {
-              // One human sentence about what this link IS, by transport.
-              const tr = (selEdge.transport ?? "").toLowerCase();
-              const dstG = rawRef.current.nodes.find((n) => n.app === selEdge.dst)?.group ?? "";
-              const story =
-                tr === "kafka"
-                  ? dstG === "kafka topics"
-                    ? `${selEdge.src} works with the ${selEdge.dst} topic — producer or consumer, see the code evidence below.`
-                    : `Async events flow from ${selEdge.src} to ${selEdge.dst} over Kafka: no direct outage on failure, but data goes stale.`
-                  : tr === "sql"
-                    ? `${selEdge.src} reads/writes the ${selEdge.dst} database — a hard dependency.`
-                    : tr === "redis"
-                      ? `${selEdge.src} uses ${selEdge.dst} as a cache/fast store.`
-                      : tr === "http" || tr === "grpc"
-                        ? `${selEdge.src} calls ${selEdge.dst} synchronously over ${tr.toUpperCase()} — its availability depends on this link.`
-                        : "";
-              return story ? <div className="topo-desc">{story}</div> : null;
-            })()}
-            {selEdge.evidence && (
-              <div className="topo-sec">
-                <div className="topo-sec-title">what &amp; why · from code</div>
-                <div className="topo-evidence">{selEdge.evidence}</div>
-              </div>
-            )}
-            <div className="topo-sec">
-              <div className="kv">
-                <span>origin</span>
-                <b>
-                  {selEdge.declared && selEdge.origin !== "declared"
-                    ? `${selEdge.origin} + declared`
-                    : selEdge.origin}
-                </b>
-              </div>
-              {selEdge.transport && (
-                <div className="kv">
-                  <span>transport</span>
-                  <b style={{ color: EDGE_COLORS[selEdge.transport] ?? undefined }}>
-                    {selEdge.transport}
-                  </b>
-                </div>
-              )}
-              {(selEdge.links ?? 0) > 0 && (
-                <div className="kv">
-                  <span>links inside</span>
-                  <b>{selEdge.links}</b>
-                </div>
-              )}
-            </div>
-            <div className="topo-sec">
-              <div className="topo-sec-title">traffic · {win}</div>
-              <div className="kv">
-                <span>rate</span>
-                <b>{selEdge.rps > 0 ? `${selEdge.rps.toFixed(2)} rps` : "—"}</b>
-              </div>
-              <div className="kv">
-                <span>error rate</span>
-                <b className={selEdge.error_rate > 0 ? "bad" : ""}>
-                  {(selEdge.error_rate * 100).toFixed(2)}%
-                </b>
-              </div>
-              <div className="kv">
-                <span>interactions</span>
-                <b>{selEdge.count.toLocaleString()}</b>
-              </div>
-              <div className="kv">
-                <span>last seen</span>
-                <b>{new Date(selEdge.last_seen).toLocaleString()}</b>
-              </div>
-            </div>
-            {!VIEWER && (
+        <DrawerWrapper
+          {...SIDE_DRAWER}
+          open={!!selEdge}
+          onOpenChange={(open) => !open && setSelection(null)}
+          title={selEdge ? `${selEdge.src} → ${selEdge.dst}` : ""}
+          subTitle="link"
+          footer={
+            selEdge && !VIEWER ? (
               <div className="topo-actions">
                 <Button
                   variant="solid"
@@ -2846,9 +2856,83 @@ export default function Topology({
                   Live tail
                 </Button>
               </div>
-            )}
-          </div>
-        )}
+            ) : undefined
+          }
+        >
+          {selEdge && (
+            <>
+              {(() => {
+                // One human sentence about what this link IS, by transport.
+                const tr = (selEdge.transport ?? "").toLowerCase();
+                const dstG = rawRef.current.nodes.find((n) => n.app === selEdge.dst)?.group ?? "";
+                const story =
+                  tr === "kafka"
+                    ? dstG === "kafka topics"
+                      ? `${selEdge.src} works with the ${selEdge.dst} topic — producer or consumer, see the code evidence below.`
+                      : `Async events flow from ${selEdge.src} to ${selEdge.dst} over Kafka: no direct outage on failure, but data goes stale.`
+                    : tr === "sql"
+                      ? `${selEdge.src} reads/writes the ${selEdge.dst} database — a hard dependency.`
+                      : tr === "redis"
+                        ? `${selEdge.src} uses ${selEdge.dst} as a cache/fast store.`
+                        : tr === "http" || tr === "grpc"
+                          ? `${selEdge.src} calls ${selEdge.dst} synchronously over ${tr.toUpperCase()} — its availability depends on this link.`
+                          : "";
+                return story ? <div className="topo-desc">{story}</div> : null;
+              })()}
+              {selEdge.evidence && (
+                <div className="topo-sec">
+                  <div className="topo-sec-title">what &amp; why · from code</div>
+                  <div className="topo-evidence">{selEdge.evidence}</div>
+                </div>
+              )}
+              <div className="topo-sec">
+                <div className="kv">
+                  <span>origin</span>
+                  <b>
+                    {selEdge.declared && selEdge.origin !== "declared"
+                      ? `${selEdge.origin} + declared`
+                      : selEdge.origin}
+                  </b>
+                </div>
+                {selEdge.transport && (
+                  <div className="kv">
+                    <span>transport</span>
+                    <b style={{ color: EDGE_COLORS[selEdge.transport] ?? undefined }}>
+                      {selEdge.transport}
+                    </b>
+                  </div>
+                )}
+                {(selEdge.links ?? 0) > 0 && (
+                  <div className="kv">
+                    <span>links inside</span>
+                    <b>{selEdge.links}</b>
+                  </div>
+                )}
+              </div>
+              <div className="topo-sec">
+                <div className="topo-sec-title">traffic · {win}</div>
+                <div className="kv">
+                  <span>rate</span>
+                  <b>{selEdge.rps > 0 ? `${selEdge.rps.toFixed(2)} rps` : "—"}</b>
+                </div>
+                <div className="kv">
+                  <span>error rate</span>
+                  <b className={selEdge.error_rate > 0 ? "bad" : ""}>
+                    {(selEdge.error_rate * 100).toFixed(2)}%
+                  </b>
+                </div>
+                <div className="kv">
+                  <span>interactions</span>
+                  <b>{selEdge.count.toLocaleString()}</b>
+                </div>
+                <div className="kv">
+                  <span>last seen</span>
+                  <b>{new Date(selEdge.last_seen).toLocaleString()}</b>
+                </div>
+              </div>
+            </>
+          )}
+        </DrawerWrapper>
       </div>
 
       <ConfirmDialog

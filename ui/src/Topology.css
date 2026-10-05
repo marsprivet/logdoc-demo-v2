@@ -1,5 +1,6 @@
-/* Topology.tsx: the architecture map — full-viewport canvas with floating
-   panels (sidebar, node/edge cards, changes/outage), zoom, inline tail.
+/* Topology.tsx: the architecture map — toolbar and filter rows (as on the
+   Logs page), a full-viewport canvas, side drawers for node/edge cards and
+   changes/outage, zoom, and the inline tail docked to the bottom.
    Controls are ds components; panels and text read the ds tokens. The
    canvas itself paints with its own data palette (Topology.tsx). */
 
@@ -38,8 +39,6 @@
 }
 
 /* Floating glass panels share one surface. */
-.topo-panel,
-.topo-side,
 .topo-tail {
   background: color-mix(in srgb, var(--l1-background), transparent 4%);
   border: 1px solid var(--l3-border);
@@ -47,32 +46,16 @@
   box-shadow: 0 6px 24px color-mix(in srgb, var(--base-black), transparent 55%);
 }
 
-/* --- cards (node, edge, changes, outage) --- */
-.topo-panel {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 300px;
-  max-height: calc(100% - 24px);
-  overflow-y: auto;
-  z-index: 50;
-  border-radius: 10px;
-  padding: 14px 16px;
+/* --- side drawers (node, edge, changes, outage) --- */
+.topo-drawer {
+  --dialog-footer-flex-direction: row;
+  font-size: 12px;
+  /* Below the sticky 52px app header, above the docked tail. */
+  top: 52px !important;
+  height: calc(100vh - 52px) !important;
+  z-index: 150 !important;
 }
-.topo-changes { right: auto; left: 12px; }
-.topo-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  color: var(--accent-primary);
-  word-break: break-all;
-}
-.topo-changes .topo-title { word-break: normal; color: var(--l1-foreground); }
-.topo-changes .topo-title .muted { font-weight: 400; font-size: 11px; }
-.topo-panel-close { margin-left: auto; }
+.topo-drawer [data-slot="drawer-description"] { flex: 1; min-height: 0; overflow-y: auto; }
 .topo-changes-sec { margin-top: 8px; border-top: 1px solid var(--l2-border); padding-top: 6px; }
 .topo-changes-sec > .muted { font-size: 11px; margin-bottom: 2px; }
 
@@ -81,9 +64,9 @@
 .kv { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; padding: 2px 0; }
 .kv span { color: var(--l3-foreground); }
 .kv b { font-weight: 600; font-family: var(--font-mono); text-align: right; }
-.topo-panel .bad { color: var(--danger-link); }
-.topo-panel .stale { color: var(--bg-yellow-500); }
-.topo-panel .accent { color: var(--accent-primary); font-family: var(--font-mono); }
+.topo-drawer .bad { color: var(--danger-link); }
+.topo-drawer .stale { color: var(--bg-yellow-500); }
+.topo-drawer .accent { color: var(--accent-primary); font-family: var(--font-mono); }
 
 /* Card sections: a thin rule + small caps title keeps the blob apart. */
 .topo-sec { margin-top: 8px; border-top: 1px solid var(--l2-border); padding-top: 6px; }
@@ -125,52 +108,62 @@
 .topo-dep { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .topo-dep-name { overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
 .topo-dep-meta { flex-shrink: 0; font-size: 11px; }
-.topo-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.topo-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
-.topo-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.dot-bad { background: var(--danger-background); }
-.dot-stale { background: var(--bg-yellow-500); }
-
-/* --- sidebar: search, node-type filter, hints --- */
-.topo-side {
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  z-index: 40;
-  width: 230px;
-  border-radius: 10px;
-  padding: 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
+/* --- toolbar: service search with suggestions, node-type chips --- */
+.topo-search { position: relative; }
 .topo-suggest {
-  margin: 6px 0 4px;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 80;
+  width: 280px;
+  background: var(--l2-background);
   border: 1px solid var(--l3-border);
   border-radius: var(--radius);
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--base-black), transparent 55%);
   overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
-.topo-suggest-row { display: flex; align-items: center; gap: 6px; padding: 4px 8px; cursor: pointer; }
+.topo-suggest-row { display: flex; align-items: center; gap: 6px; padding: 5px 10px; cursor: pointer; }
 .topo-suggest-row:hover { background: color-mix(in srgb, var(--primary-background), transparent 85%); }
 .topo-suggest-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .topo-suggest-row .muted {
   margin-left: auto;
-  font-size: 9px;
-  max-width: 70px;
+  font-size: 10px;
+  max-width: 90px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.topo-side-title {
-  color: var(--l3-foreground);
-  margin: 12px 0 6px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-size: 10px;
+
+/* Node-type filter: a chip per type, unselected types fade back (like the
+   level filter on the Logs page). */
+.type-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--l3-border);
+  border-radius: var(--radius);
+  background: var(--l2-background);
+  color: var(--l1-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.2s, border-color 0.2s;
 }
-.topo-legend-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
-.topo-legend-label { display: inline-flex; align-items: center; gap: 6px; }
-.topo-legend-cnt { margin-left: auto; color: var(--l3-foreground); }
-.topo-side-hint { color: var(--l3-foreground); margin-top: 10px; line-height: 1.6; font-size: 10px; }
+.type-toggle:hover { opacity: 0.75; }
+.type-toggle[aria-pressed="true"] { opacity: 1; }
+.type-toggle:focus-visible { outline: 1px solid var(--ring); outline-offset: 2px; }
+.type-toggle-cnt { color: var(--l3-foreground); }
+
+.topo-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-bad { background: var(--danger-background); }
+.dot-stale { background: var(--bg-yellow-500); }
 
 /* --- zoom buttons --- */
 .topo-zoom {
@@ -185,11 +178,11 @@
 /* --- inline live tail under the map --- */
 .topo-tail {
   position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
   z-index: 70;
-  border-radius: 6px;
+  border-radius: 0px;
   font-family: var(--font-mono);
   font-size: 11px;
   display: flex;
@@ -238,3 +231,6 @@
 
 /* Project title dialog body. */
 .topo-dialog-body { display: flex; flex-direction: column; gap: 10px; }
+
+/* Filter rows sit between the toolbar and the canvas. */
+.topo .filter-row { margin: 0 0 8px; }

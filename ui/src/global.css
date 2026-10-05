@@ -45,6 +45,10 @@ body {
 /* A row of controls (filters, form fields, action bars). */
 .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+/* Rows of labelled filters under a toolbar ("// period", "// node type"…). */
+.filter-row { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; flex-wrap: wrap; }
+.filter-row + .filter-row { margin-top: 8px; }
+
 /* Panels: forms, settings, floating cards. */
 .panel {
   background: var(--l2-background);
