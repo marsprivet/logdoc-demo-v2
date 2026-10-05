@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import { Button } from "@ds/components/button";
 import { Callout } from "@ds/components/callout";
-import { Checkbox } from "@ds/components/checkbox";
 import { Input } from "@ds/components/input";
 import { Pill } from "@ds/components/pill";
-import { Slider } from "@ds/components/slider";
 import { ToggleGroup } from "@ds/components/toggle-group";
-import { ArrowUp, Download, Minus, Play, Plus, Settings2, Square } from "@ds/icons";
+import { ArrowUp, Minus, Play, Plus, Square } from "@ds/icons";
 import LevelBadge, { LEVELS } from "./components/LevelBadge";
 import SearchInput from "./components/SearchInput";
+import {
+  ExportMenu,
+  FONT_SIZES,
+  TableSettingsMenu,
+  loadView,
+  type ExportColumns,
+  type ExportFormat,
+  type ViewConfig,
+} from "./components/LogsViewMenus";
 import "./LogsView.css";
 
 type Entry = {
@@ -31,16 +38,6 @@ export type LogsRequest = {
 // A click-added filter, the v1 "flap": app, source or an exact field match.
 type Chip = { kind: "app" | "src" | "field"; key?: string; value: string };
 
-type Density = "full" | "compact";
-
-type ViewConfig = {
-  showTime: boolean;
-  showApp: boolean;
-  showSrc: boolean;
-  showFields: boolean;
-  density: Density;
-  fontSize: number; // px for the mono log text
-};
 
 const MAX_TAIL_ROWS = 500;
 const MAX_LOADED_ROWS = 3000;
@@ -54,22 +51,7 @@ const PERIODS: { id: string; label: string; minutes: number | null }[] = [
   { id: "all", label: "all", minutes: null },
 ];
 
-const DEFAULT_VIEW: ViewConfig = {
-  showTime: true,
-  showApp: true,
-  showSrc: true,
-  showFields: true,
-  density: "full",
-  fontSize: 13,
-};
 
-function loadView(): ViewConfig {
-  try {
-    return { ...DEFAULT_VIEW, ...JSON.parse(localStorage.getItem("logdoc_view") ?? "{}") };
-  } catch {
-    return DEFAULT_VIEW;
-  }
-}
 
 function chipLabel(c: Chip): string {
   if (c.kind === "field") return `${c.key}=${c.value}`;
@@ -96,7 +78,6 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [newCount, setNewCount] = useState(0);
   const [view, setView] = useState<ViewConfig>(loadView);
-  const [showView, setShowView] = useState(false);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const wsRef = useRef<WebSocket | null>(null);
   const pausedRef = useRef<Entry[]>([]);
@@ -302,28 +283,31 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
     else void search(undefined, next);
   }
 
-  function exportAs(format: "csv" | "ndjson") {
+  function exportAs(format: ExportFormat, columns: ExportColumns) {
+    // "visible" keeps what the table shows: level and message always, the rest per View.
+    const all = columns === "all";
+    const cols: [keyof Entry, boolean][] = [
+      ["ts", all || view.showTime],
+      ["lvl", true],
+      ["app", all || view.showApp],
+      ["src", all || view.showSrc],
+      ["pid", all],
+      ["msg", true],
+      ["fields", all || view.showFields],
+    ];
+    const keys = cols.filter(([, on]) => on).map(([k]) => k);
     let text: string;
     if (format === "ndjson") {
-      text = entries.map((e) => JSON.stringify(e)).join("\n");
+      text = entries
+        .map((e) => JSON.stringify(Object.fromEntries(keys.filter((k) => e[k] !== undefined).map((k) => [k, e[k]]))))
+        .join("\n");
     } else {
       const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
-      text = [
-        "ts,lvl,app,src,pid,msg,fields",
-        ...entries.map((e) =>
-          [
-            e.ts,
-            e.lvl,
-            e.app ?? "",
-            e.src ?? "",
-            e.pid ?? "",
-            e.msg,
-            e.fields ? JSON.stringify(e.fields) : "",
-          ]
-            .map(esc)
-            .join(","),
-        ),
-      ].join("\n");
+      const cell = (e: Entry, k: keyof Entry) => {
+        const v = e[k];
+        return v === undefined ? "" : typeof v === "string" ? v : JSON.stringify(v);
+      };
+      text = [keys.join(","), ...entries.map((e) => keys.map((k) => esc(cell(e, k))).join(","))].join("\n");
     }
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const a = document.createElement("a");
@@ -389,7 +373,6 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
 
   const colCount = 2 + (view.showTime ? 1 : 0) + (view.showApp ? 1 : 0) + (view.showSrc ? 1 : 0);
 
-  const hasEntries = entries.length > 0;
   const tailBusy = "Stop live tail to change the period";
 
   return (
@@ -421,25 +404,10 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
             Live tail
           </Button>
         )}
-        <Button
-          variant={showView ? "outlined" : "ghost"}
-          color="secondary"
-          size="md"
-          prefix={<Settings2 size="md" />}
-          onClick={() => setShowView((v) => !v)}
-        >
-          View
-        </Button>
-        {hasEntries && (
-          <span className="toolbar-end">
-            <Button variant="ghost" color="secondary" size="md" prefix={<Download size="md" />} onClick={() => exportAs("csv")}>
-              CSV
-            </Button>
-            <Button variant="ghost" color="secondary" size="md" prefix={<Download size="md" />} onClick={() => exportAs("ndjson")}>
-              NDJSON
-            </Button>
-          </span>
-        )}
+        <span className="toolbar-end">
+          <ExportMenu rows={entries.length} onExport={exportAs} />
+          <TableSettingsMenu view={view} onChange={setView} />
+        </span>
       </div>
 
       <div className="filter-row">
@@ -490,50 +458,6 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
         </div>
       )}
 
-      {showView && (
-        <div className="panel view-settings">
-          <span className="sect">{"// view"}</span>
-          {(
-            [
-              ["showTime", "time"],
-              ["showApp", "app"],
-              ["showSrc", "src"],
-              ["showFields", "fields"],
-            ] as const
-          ).map(([k, label]) => (
-            <Checkbox
-              key={k}
-              color="primary"
-              value={view[k]}
-              onChange={(checked) => setView((v) => ({ ...v, [k]: checked }))}
-            >
-              {label}
-            </Checkbox>
-          ))}
-          <ToggleGroup
-            type="single"
-            variant="outlined"
-            color="secondary"
-            size="sm"
-            value={view.density}
-            onChange={(v) => v && setView((cfg) => ({ ...cfg, density: v as Density }))}
-            items={[
-              { value: "full", label: "full" },
-              { value: "compact", label: "compact" },
-            ]}
-          />
-          <span className="sect">font</span>
-          <Slider
-            min={10}
-            max={18}
-            step={1}
-            value={view.fontSize}
-            onChange={(v) => setView((cfg) => ({ ...cfg, fontSize: Array.isArray(v) ? v[0] : v }))}
-            style={{ width: 120 }}
-          />
-          <span className="sect">{view.fontSize}px</span>
-        </div>
-      )}
 
       {error && <Callout type="error" title={error} />}
       {tookMs !== null && (
@@ -561,7 +485,12 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
 
       <table
         className={view.density === "compact" ? "data-table logs compact" : "data-table logs"}
-        style={{ "--log-font-size": `${view.fontSize}px` } as CSSProperties}
+        style={
+          {
+            "--log-font-size": `${FONT_SIZES[view.fontSize].font}px`,
+            "--log-line-height": `${FONT_SIZES[view.fontSize].line}px`,
+          } as CSSProperties
+        }
       >
         <thead>
           <tr>

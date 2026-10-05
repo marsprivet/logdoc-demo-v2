@@ -24,7 +24,6 @@
 .custom-range { display: inline-flex; align-items: center; gap: 6px; }
 .custom-range input { color-scheme: dark; }
 
-.view-settings { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
 
 /* Floating "new entries" button while tail is paused by scrolling. */
 .new-entries {
