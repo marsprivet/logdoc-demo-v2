@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@base-ui/react/button";
+import { Tabs } from "@ds/components/tabs";
 import "./App.css";
 import LogsView, { type LogsRequest } from "./LogsView";
 import Topology from "./Topology";
@@ -59,32 +59,24 @@ export default function App() {
       <header>
         <img src="/logo.svg" alt="LogDoc" className="logo" />
         {(me === "anon" || me.mode === "open") && <span className="app-version">v2</span>}
-        <nav className="tabs">
-          <Button className={view === "logs" ? "tab on" : "tab"} onClick={() => setView("logs")}>
-            Logs
-          </Button>
-          <Button
-            className={view === "topology" ? "tab on" : "tab"}
-            onClick={() => setView("topology")}
-          >
-            Topology
-          </Button>
-          <Button className={view === "rules" ? "tab on" : "tab"} onClick={() => setView("rules")}>
-            Rules
-          </Button>
-          {me !== "anon" && me.mode !== "open" && (
-            <Button
-              className={view === "access" ? "tab on" : "tab"}
-              onClick={() => setView("access")}
-            >
-              Access
-            </Button>
-          )}
-        </nav>
+        {/* Panels render below (Logs stays mounted to keep its state), so items carry no content. */}
+        <Tabs
+          variant="primary"
+          orientation="horizontal"
+          alignment="start"
+          value={view}
+          onChange={(key) => setView(key as View)}
+          items={[
+            { key: "logs", label: "Logs", children: null },
+            { key: "topology", label: "Topology", children: null },
+            { key: "rules", label: "Rules", children: null },
+            ...(me !== "anon" && me.mode !== "open" ? [{ key: "access", label: "Access", children: null }] : []),
+          ]}
+        />
         {me !== "anon" && me.mode !== "open" && (
-          <span className="muted">
+          <span className="muted header-user">
             {me.mode === "key" ? "api key" : me.login} · {me.role} ·{" "}
-            <span className="clickable" onClick={logout}>
+            <span className="text-action" onClick={logout}>
               logout
             </span>
           </span>

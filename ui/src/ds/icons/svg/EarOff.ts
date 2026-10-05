@@ -1,7 +1,7 @@
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { createIcon } from '../create-icon';
 
-export default createIcon('EarOff', (l) =>
+export default /* @__PURE__ */ createIcon('EarOff', (l) =>
 	jsxs("svg", {
 	width: 16,
 	height: 16,

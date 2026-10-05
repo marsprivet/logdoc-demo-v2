@@ -1,30 +1,19 @@
-/* App.tsx: header (logo, version, logout) and the Logs/Topology/Rules/
-   Access page tabs. */
+/* App.tsx: header (logo, version, page tabs, signed-in user). */
 
 header {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding-bottom: 14px;
   margin-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--l3-border);
 }
 .logo { height: 26px; display: block; }
 .app-version {
   margin-left: -10px;
-  font-family: var(--mono);
+  font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--muted);
+  color: var(--l3-foreground);
 }
-
-.tabs { display: flex; gap: 4px; }
-.tab {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--muted);
-  font-weight: 500;
-  font-size: 14px;
-  padding: 5px 12px;
-}
-.tab:hover { color: var(--text); background: transparent; border-color: transparent; }
-.tab.on { color: var(--accent); }
+/* The ds tab bar draws its own underline; let it sit on the header rule. */
+header > [role="tablist"], header > div:has(> [role="tablist"]) { margin-bottom: -1px; }
+.header-user { margin-left: auto; font-size: 13px; }

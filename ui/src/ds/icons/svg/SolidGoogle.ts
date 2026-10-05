@@ -1,7 +1,7 @@
 import { jsx } from 'react/jsx-runtime';
 import { createIcon } from '../create-icon';
 
-export default createIcon('SolidGoogle', (c) =>
+export default /* @__PURE__ */ createIcon('SolidGoogle', (c) =>
 	jsx("svg", {
 	xmlns: "http://www.w3.org/2000/svg",
 	width: 24,

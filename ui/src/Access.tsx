@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { Input } from "@base-ui/react/input";
-import { Button } from "@base-ui/react/button";
+import { Button } from "@ds/components/button";
+import { Callout } from "@ds/components/callout";
+import { ConfirmDialog } from "@ds/components/dialog";
+import { Input } from "@ds/components/input";
+import { SelectSimple } from "@ds/components/select";
+import { KeyRound, UserPlus } from "@ds/icons";
 import "./Access.css";
-import Select from "./ui/Select";
-import ConfirmDialog from "./ui/ConfirmDialog";
+
+const ROLE_ITEMS = [
+  { value: "member", label: "member" },
+  { value: "admin", label: "admin" },
+];
 
 // Access screen: personal API tokens of the signed-in user, plus user
 // management for admins. Bootstrap-key sessions see only the users section
@@ -87,25 +94,30 @@ function Tokens() {
   return (
     <section>
       <div className="sect">// personal API tokens — full access with your role, revocable</div>
-      {error && <div className="error">{error}</div>}
+      {error && <Callout type="error" title={error} />}
       {fresh && (
-        <div className="token-fresh">
-          <span className="muted">copy it now, it is not shown again:</span> <code>{fresh}</code>
-          <span className="clickable" onClick={() => setFresh(null)}>
-            dismiss
-          </span>
-        </div>
+        <Callout type="success" title="Copy the token now — it is not shown again">
+          <div className="token-fresh">
+            <code>{fresh}</code>
+            <span className="text-action" onClick={() => setFresh(null)}>
+              dismiss
+            </span>
+          </div>
+        </Callout>
       )}
-      <div className="filters">
+      <div className="toolbar">
         <Input
           placeholder="token name (e.g. ci, laptop)"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          containerStyle={{ width: 260 }}
         />
-        <Button onClick={create}>Create token</Button>
+        <Button variant="solid" color="primary" size="md" prefix={<KeyRound size="md" />} onClick={create}>
+          Create token
+        </Button>
       </div>
       {tokens && tokens.length > 0 && (
-        <table>
+        <table className="data-table">
           <thead>
             <tr>
               <th>name</th>
@@ -116,10 +128,10 @@ function Tokens() {
           <tbody>
             {tokens.map((t) => (
               <tr key={t.id}>
-                <td className="app">{t.name}</td>
-                <td className="ts">{new Date(t.created_at).toLocaleString()}</td>
-                <td>
-                  <span className="clickable" onClick={() => setConfirmRevoke(t)}>
+                <td className="cell-mono">{t.name}</td>
+                <td className="cell-ts">{new Date(t.created_at).toLocaleString()}</td>
+                <td className="cell-actions">
+                  <span className="text-action" onClick={() => setConfirmRevoke(t)}>
                     revoke
                   </span>
                 </td>
@@ -133,15 +145,16 @@ function Tokens() {
         open={confirmRevoke !== null}
         onOpenChange={(open) => !open && setConfirmRevoke(null)}
         title="Revoke token"
-        description={
-          confirmRevoke
-            ? `Revoke "${confirmRevoke.name}"? Clients using it stop working immediately.`
-            : ""
-        }
-        confirmLabel="Revoke"
-        danger
-        onConfirm={() => confirmRevoke && revoke(confirmRevoke)}
-      />
+        confirmText="Revoke"
+        confirmColor="danger"
+        onConfirm={() => {
+          if (confirmRevoke) void revoke(confirmRevoke);
+        }}
+      >
+        {confirmRevoke
+          ? `Revoke "${confirmRevoke.name}"? Clients using it stop working immediately.`
+          : ""}
+      </ConfirmDialog>
     </section>
   );
 }
@@ -207,30 +220,42 @@ function Users() {
       <div className="sect">
         // users — member: search, tail, topology · admin: + rules and users
       </div>
-      {error && <div className="error">{error}</div>}
-      <div className="filters">
-        <Input placeholder="login" value={login} onChange={(e) => setLogin(e.target.value)} />
+      {error && <Callout type="error" title={error} />}
+      <div className="toolbar">
+        <Input
+          placeholder="login"
+          value={login}
+          onChange={(e) => setLogin(e.target.value)}
+          containerStyle={{ width: 180 }}
+        />
         <Input
           placeholder="password (min 8; empty keeps current)"
           type="password"
           value={password}
           autoComplete="new-password"
           onChange={(e) => setPassword(e.target.value)}
+          containerStyle={{ width: 300 }}
         />
-        <Select
+        <SelectSimple
           value={role}
-          onValueChange={setRole}
-          options={[
-            { value: "member", label: "member" },
-            { value: "admin", label: "admin" },
-          ]}
+          onChange={(v) => setRole(v as string)}
+          items={ROLE_ITEMS}
+          style={{ width: 130 }}
         />
-        <Button onClick={save} disabled={!login.trim()}>
+        <Button
+          variant="solid"
+          color="primary"
+          size="md"
+          prefix={<UserPlus size="md" />}
+          onClick={save}
+          disabled={!login.trim()}
+          disabledTooltip="Enter a login"
+        >
           Save user
         </Button>
       </div>
       {users && users.length > 0 && (
-        <table>
+        <table className="data-table">
           <thead>
             <tr>
               <th>login</th>
@@ -242,20 +267,18 @@ function Users() {
           <tbody>
             {users.map((u) => (
               <tr key={u.login}>
-                <td className="app">{u.login}</td>
-                <td className="src">
-                  <Select
+                <td className="cell-mono">{u.login}</td>
+                <td>
+                  <SelectSimple
                     value={u.role}
-                    onValueChange={(v) => setUserRole(u, v)}
-                    options={[
-                      { value: "member", label: "member" },
-                      { value: "admin", label: "admin" },
-                    ]}
+                    onChange={(v) => setUserRole(u, v as string)}
+                    items={ROLE_ITEMS}
+                    style={{ width: 130 }}
                   />
                 </td>
-                <td className="ts">{new Date(u.created_at).toLocaleString()}</td>
-                <td>
-                  <span className="clickable" onClick={() => setConfirmDelete(u)}>
+                <td className="cell-ts">{new Date(u.created_at).toLocaleString()}</td>
+                <td className="cell-actions">
+                  <span className="text-action" onClick={() => setConfirmDelete(u)}>
                     delete
                   </span>
                 </td>
@@ -268,13 +291,14 @@ function Users() {
         open={confirmDelete !== null}
         onOpenChange={(open) => !open && setConfirmDelete(null)}
         title="Delete user"
-        description={
-          confirmDelete ? `Delete "${confirmDelete.login}" and revoke their tokens?` : ""
-        }
-        confirmLabel="Delete"
-        danger
-        onConfirm={() => confirmDelete && remove(confirmDelete)}
-      />
+        confirmText="Delete"
+        confirmColor="danger"
+        onConfirm={() => {
+          if (confirmDelete) void remove(confirmDelete);
+        }}
+      >
+        {confirmDelete ? `Delete "${confirmDelete.login}" and revoke their tokens?` : ""}
+      </ConfirmDialog>
       {users && users.length === 0 && (
         <p className="muted">
           No users yet — everyone with the API key is an admin. Create accounts to give

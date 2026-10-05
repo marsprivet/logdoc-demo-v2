@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
-import { Input } from "@base-ui/react/input";
-import { Button } from "@base-ui/react/button";
-import ClearableInput from "./ui/ClearableInput";
+import { Button } from "@ds/components/button";
+import { Callout } from "@ds/components/callout";
+import { Checkbox } from "@ds/components/checkbox";
+import { Input } from "@ds/components/input";
+import { Pill } from "@ds/components/pill";
+import { Slider } from "@ds/components/slider";
+import { ToggleGroup } from "@ds/components/toggle-group";
+import { ArrowUp, Download, Minus, Play, Plus, Settings2, Square } from "@ds/icons";
+import LevelBadge, { LEVELS } from "./components/LevelBadge";
+import SearchInput from "./components/SearchInput";
 import "./LogsView.css";
 
 type Entry = {
@@ -35,7 +42,6 @@ type ViewConfig = {
   fontSize: number; // px for the mono log text
 };
 
-const LEVELS = ["DEBUG", "INFO", "LOG", "WARN", "ERROR", "SEVERE", "PANIC"];
 const MAX_TAIL_ROWS = 500;
 const MAX_LOADED_ROWS = 3000;
 const BATCH = 200;
@@ -340,20 +346,20 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
   const renderCells = (e: Entry, extra?: ReactElement) => (
     <>
       {view.showTime && (
-        <td className="ts" style={monoStyle}>
+        <td className="cell-ts" style={monoStyle}>
           {fmtTs(e.ts)}
         </td>
       )}
       <td>
-        <span className={`lv ${e.lvl}`}>{e.lvl}</span>
+        <LevelBadge level={e.lvl} />
       </td>
       {view.showApp && (
-        <td className="app clickable" style={monoStyle} onClick={() => e.app && addChip({ kind: "app", value: e.app })} title="filter by app">
+        <td className="cell-mono filterable" style={monoStyle} onClick={() => e.app && addChip({ kind: "app", value: e.app })} title="filter by app">
           {e.app}
         </td>
       )}
       {view.showSrc && (
-        <td className="src clickable" style={monoStyle} onClick={() => e.src && addChip({ kind: "src", value: e.src })} title="filter by source">
+        <td className="cell-muted filterable" style={monoStyle} onClick={() => e.src && addChip({ kind: "src", value: e.src })} title="filter by source">
           {e.src}
         </td>
       )}
@@ -364,7 +370,7 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
           Object.entries(e.fields).map(([k, v]) => (
             <span
               key={k}
-              className="field clickable"
+              className="field filterable"
               onClick={() => addChip({ kind: "field", key: k, value: v })}
               title="filter by field"
             >
@@ -378,65 +384,72 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
 
   const colCount = 2 + (view.showTime ? 1 : 0) + (view.showApp ? 1 : 0) + (view.showSrc ? 1 : 0);
 
+  const hasEntries = entries.length > 0;
+  const tailBusy = "Stop live tail to change the period";
+
   return (
     <>
-      <div className="filters">
-        <ClearableInput
-          placeholder="$ app, app2..."
+      <div className="toolbar">
+        <SearchInput
+          placeholder="app, app2..."
           value={app}
           onValueChange={setApp}
           onKeyDown={(e) => e.key === "Enter" && search()}
+          width={240}
         />
-        <ClearableInput
-          placeholder="$ grep message..."
+        <SearchInput
+          placeholder="grep message..."
           value={q}
           onValueChange={setQ}
           onKeyDown={(e) => e.key === "Enter" && search()}
+          width={280}
         />
-        <Button onClick={() => search()}>Search</Button>
-        <Button className={tailing ? "tail on" : "tail"} onClick={tailing ? stopTail : () => startTail()}>
-          {tailing ? "■ Stop" : "▶ Live tail"}
+        <Button variant="solid" color="primary" size="md" onClick={() => search()}>
+          Search
         </Button>
-        <Button className="tail" onClick={() => setShowView((v) => !v)} title="view settings">
-          ⚙ View
-        </Button>
+        {tailing ? (
+          <Button variant="solid" color="danger" size="md" prefix={<Square size="md" />} onClick={stopTail}>
+            Stop
+          </Button>
+        ) : (
+          <Button variant="outlined" color="secondary" size="md" prefix={<Play size="md" />} onClick={() => startTail()}>
+            Live tail
+          </Button>
+        )}
         <Button
-          className="tail"
-          disabled={entries.length === 0}
-          style={entries.length === 0 ? { visibility: "hidden" } : undefined}
-          onClick={() => exportAs("csv")}
+          variant={showView ? "outlined" : "ghost"}
+          color="secondary"
+          size="md"
+          prefix={<Settings2 size="md" />}
+          onClick={() => setShowView((v) => !v)}
         >
-          ⇩ CSV
+          View
         </Button>
-        <Button
-          className="tail"
-          disabled={entries.length === 0}
-          style={entries.length === 0 ? { visibility: "hidden" } : undefined}
-          onClick={() => exportAs("ndjson")}
-        >
-          ⇩ NDJSON
-        </Button>
+        {hasEntries && (
+          <span className="toolbar-end">
+            <Button variant="ghost" color="secondary" size="md" prefix={<Download size="md" />} onClick={() => exportAs("csv")}>
+              CSV
+            </Button>
+            <Button variant="ghost" color="secondary" size="md" prefix={<Download size="md" />} onClick={() => exportAs("ndjson")}>
+              NDJSON
+            </Button>
+          </span>
+        )}
       </div>
 
-      <div className="levels">
+      <div className="filter-row">
         <span className="sect">{"// period"}</span>
-        {PERIODS.map((p) => (
-          <Button
-            key={p.id}
-            className={period === p.id ? "winbtn on" : "winbtn"}
-            onClick={() => setPeriod(p.id)}
-            disabled={tailing}
-          >
-            {p.label}
-          </Button>
-        ))}
-        <Button
-          className={period === "custom" ? "winbtn on" : "winbtn"}
-          onClick={() => setPeriod("custom")}
-          disabled={tailing}
-        >
-          custom
-        </Button>
+        <ToggleGroup
+          type="single"
+          variant="outlined"
+          color="secondary"
+          size="sm"
+          value={period}
+          onChange={(v) => v && setPeriod(v)}
+          items={[...PERIODS.map((p) => ({ value: p.id, label: p.label })), { value: "custom", label: "custom" }].map(
+            (item) => (tailing ? { ...item, disabled: true, disabledTooltip: tailBusy } : item),
+          )}
+        />
         {period === "custom" && (
           <span className="custom-range">
             <Input type="datetime-local" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
@@ -446,32 +459,34 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
         )}
       </div>
 
-      <div className="levels">
+      <div className="filter-row">
         <span className="sect">{"// levels"}</span>
         {LEVELS.map((name) => (
-          <label key={name} className={lvl.includes(name) ? `lv ${name} sel` : `lv ${name}`}>
-            <input type="checkbox" checked={lvl.includes(name)} onChange={() => toggleLevel(name)} />
-            {name}
-          </label>
+          <button
+            key={name}
+            type="button"
+            className="level-toggle"
+            aria-pressed={lvl.includes(name)}
+            onClick={() => toggleLevel(name)}
+          >
+            <LevelBadge level={name} />
+          </button>
         ))}
       </div>
 
       {chips.length > 0 && (
-        <div className="chips">
+        <div className="filter-row">
           <span className="sect">{"// filters"}</span>
           {chips.map((c) => (
-            <span key={chipLabel(c)} className="chip">
+            <Pill.Closeable key={chipLabel(c)} onClose={() => removeChip(c)} closeAriaLabel="Remove filter">
               {chipLabel(c)}
-              <Button className="chip-x" onClick={() => removeChip(c)} title="remove filter">
-                ×
-              </Button>
-            </span>
+            </Pill.Closeable>
           ))}
         </div>
       )}
 
       {showView && (
-        <div className="viewcfg">
+        <div className="panel view-settings">
           <span className="sect">{"// view"}</span>
           {(
             [
@@ -481,30 +496,41 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
               ["showFields", "fields"],
             ] as const
           ).map(([k, label]) => (
-            <label key={k} className={view[k] ? "vopt sel" : "vopt"}>
-              <input type="checkbox" checked={view[k]} onChange={() => setView((v) => ({ ...v, [k]: !v[k] }))} />
+            <Checkbox
+              key={k}
+              color="primary"
+              value={view[k]}
+              onChange={(checked) => setView((v) => ({ ...v, [k]: checked }))}
+            >
               {label}
-            </label>
+            </Checkbox>
           ))}
-          <Button
-            className={view.density === "compact" ? "winbtn on" : "winbtn"}
-            onClick={() => setView((v) => ({ ...v, density: v.density === "compact" ? "full" : "compact" }))}
-          >
-            compact
-          </Button>
+          <ToggleGroup
+            type="single"
+            variant="outlined"
+            color="secondary"
+            size="sm"
+            value={view.density}
+            onChange={(v) => v && setView((cfg) => ({ ...cfg, density: v as Density }))}
+            items={[
+              { value: "full", label: "full" },
+              { value: "compact", label: "compact" },
+            ]}
+          />
           <span className="sect">font</span>
-          <Input
-            type="range"
+          <Slider
             min={10}
             max={18}
+            step={1}
             value={view.fontSize}
-            onChange={(e) => setView((v) => ({ ...v, fontSize: Number(e.target.value) }))}
+            onChange={(v) => setView((cfg) => ({ ...cfg, fontSize: Array.isArray(v) ? v[0] : v }))}
+            style={{ width: 120 }}
           />
           <span className="sect">{view.fontSize}px</span>
         </div>
       )}
 
-      {error && <div className="error">{error}</div>}
+      {error && <Callout type="error" title={error} />}
       {tookMs !== null && (
         <div className="muted stat">
           {entries.length} entries in {tookMs} ms
@@ -512,12 +538,23 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
       )}
       {tailing && <div className="muted stat">live: {entries.length} entries</div>}
       {newCount > 0 && (
-        <Button className="newpill" onClick={() => { flushPaused(); window.scrollTo({ top: 0 }); }}>
-          ↑ {newCount} new entries
-        </Button>
+        <div className="new-entries">
+          <Button
+            variant="solid"
+            color="primary"
+            size="md"
+            prefix={<ArrowUp size="md" />}
+            onClick={() => {
+              flushPaused();
+              window.scrollTo({ top: 0 });
+            }}
+          >
+            {`${newCount} new entries`}
+          </Button>
+        </div>
       )}
 
-      <table className={view.density === "compact" ? "compact" : undefined}>
+      <table className={view.density === "compact" ? "data-table logs compact" : "data-table logs"}>
         <thead>
           <tr>
             {view.showTime && <th>time</th>}
@@ -568,10 +605,17 @@ function GroupRows({
   const { head, rest } = group;
   const badge =
     rest.length > 0 ? (
-      <Button className="grp" onClick={toggle} title={open ? "collapse" : "expand"}>
-        {open ? "− " : "+ "}
-        {rest.length + 1}
-      </Button>
+      <span className="group-toggle">
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="sm"
+          prefix={open ? <Minus size="sm" /> : <Plus size="sm" />}
+          onClick={toggle}
+        >
+          {String(rest.length + 1)}
+        </Button>
+      </span>
     ) : undefined;
   return (
     <>
@@ -584,7 +628,7 @@ function GroupRows({
         ))}
       {!open && rest.length > 0 && (
         <tr className={`row ${head.lvl} grouped ellipsis`} onClick={toggle}>
-          <td colSpan={colCount} className="muted">
+          <td colSpan={colCount} className="cell-muted">
             ⋯ {rest.length} more from {head.app}/{head.src}
           </td>
         </tr>

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Input } from "@base-ui/react/input";
-import { Button } from "@base-ui/react/button";
+import { Button } from "@ds/components/button";
+import { Callout } from "@ds/components/callout";
+import { Input } from "@ds/components/input";
 import "./Login.css";
 
 // Login screen: a user session (login + password → JWT) or a raw API key /
@@ -44,7 +45,7 @@ export default function Login({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="login">
-      <form className="login-card" onSubmit={submitUser}>
+      <form className="panel login-card" onSubmit={submitUser}>
         <div className="sect">// sign in</div>
         <Input
           placeholder="login"
@@ -60,22 +61,36 @@ export default function Login({ onDone }: { onDone: () => void }) {
           autoComplete="current-password"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Button type="submit" disabled={!login || !password}>
+        <Button
+          type="submit"
+          variant="solid"
+          color="primary"
+          size="md"
+          disabled={!login || !password}
+          disabledTooltip="Enter login and password"
+        >
           Sign in
         </Button>
       </form>
-      <form className="login-card" onSubmit={submitKey}>
+      <form className="panel login-card" onSubmit={submitKey}>
         <div className="sect">// or use an API key / personal token</div>
         <Input
           placeholder="API key or ldt_… token"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
         />
-        <Button type="submit" disabled={!apiKey}>
+        <Button
+          type="submit"
+          variant="outlined"
+          color="secondary"
+          size="md"
+          disabled={!apiKey}
+          disabledTooltip="Paste an API key or token"
+        >
           Use key
         </Button>
       </form>
-      {error && <div className="error">{error}</div>}
+      {error && <Callout type="error" title={error} />}
     </div>
   );
 }

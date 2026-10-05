@@ -1,0 +1,19 @@
+/* LevelBadge.tsx: per-level color comes from --level-* in global.css. */
+
+.level-badge {
+  --level-color: var(--level-debug);
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--level-color);
+  background: color-mix(in srgb, var(--level-color), transparent 86%);
+}
+.level-badge[data-level="INFO"] { --level-color: var(--level-info); }
+.level-badge[data-level="LOG"] { --level-color: var(--level-log); }
+.level-badge[data-level="WARN"] { --level-color: var(--level-warn); }
+.level-badge[data-level="ERROR"] { --level-color: var(--level-error); }
+.level-badge[data-level="SEVERE"] { --level-color: var(--level-severe); }
+.level-badge[data-level="PANIC"] { --level-color: var(--level-panic); }

@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@base-ui/react/button";
+import { Button } from "@ds/components/button";
+import { Callout } from "@ds/components/callout";
+import { ToggleGroup } from "@ds/components/toggle-group";
+import { Download, FileClock, ScrollText, Play } from "@ds/icons";
 import "./Topology.css";
 
 // Architecture map: a force-directed canvas over GET /api/v1/topology.
@@ -582,23 +585,30 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
   return (
     <div className="topo">
       <div className="topo-bar">
-        <span className="sect">window</span>
-        {WINDOWS.map((v) => (
-          <Button key={v} className={v === win ? "winbtn on" : "winbtn"} onClick={() => setWin(v)}>
-            {v}
-          </Button>
-        ))}
-        <span className="topo-sep">|</span>
+        <span className="sect">{"// window"}</span>
+        <ToggleGroup
+          type="single"
+          variant="outlined"
+          color="secondary"
+          size="sm"
+          value={win}
+          onChange={(v) => v && setWin(v)}
+          items={WINDOWS.map((v) => ({ value: v, label: v }))}
+        />
         <Button
-          className={showChanges ? "winbtn on" : "winbtn"}
+          variant={showChanges ? "outlined" : "ghost"}
+          color="secondary"
+          size="sm"
+          prefix={<FileClock size="sm" />}
           onClick={() => setShowChanges((v) => !v)}
         >
           Changes
         </Button>
         <div className="topo-bar-right">
-          <span className="sect">export</span>
+          <span className="sect">{"// export"}</span>
+          <Download size="sm" className="muted" />
           <a
-            className="winbtn"
+            className="text-action"
             href={`/api/v1/topology/export?format=mermaid&window=${win}${apiKeyParam()}`}
             target="_blank"
             rel="noreferrer"
@@ -606,7 +616,7 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
             Mermaid
           </a>
           <a
-            className="winbtn"
+            className="text-action"
             href={`/api/v1/topology/export?format=markdown&window=${win}${apiKeyParam()}`}
             target="_blank"
             rel="noreferrer"
@@ -615,7 +625,7 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
           </a>
         </div>
       </div>
-      {error && <div className="error">{error}</div>}
+      {error && <Callout type="error" title={error} />}
       <div className="topo-body">
         <canvas
           ref={canvasRef}
@@ -782,8 +792,12 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
               </div>
             )}
             <div className="topo-actions">
-              <Button onClick={() => onOpenLogs(selNode.app, false)}>Logs</Button>
-              <Button onClick={() => onOpenLogs(selNode.app, true)}>Live tail</Button>
+              <Button variant="solid" color="primary" size="sm" prefix={<ScrollText size="sm" />} onClick={() => onOpenLogs(selNode.app, false)}>
+                Logs
+              </Button>
+              <Button variant="outlined" color="secondary" size="sm" prefix={<Play size="sm" />} onClick={() => onOpenLogs(selNode.app, true)}>
+                Live tail
+              </Button>
             </div>
           </div>
         )}
@@ -816,8 +830,16 @@ export default function Topology({ onOpenLogs }: { onOpenLogs: (app: string, tai
               <b>{new Date(selEdge.last_seen).toLocaleString()}</b>
             </div>
             <div className="topo-actions">
-              <Button onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, false)}>Logs</Button>
-              <Button onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, true)}>
+              <Button variant="solid" color="primary" size="sm" prefix={<ScrollText size="sm" />} onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, false)}>
+                Logs
+              </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="sm"
+                prefix={<Play size="sm" />}
+                onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, true)}
+              >
                 Live tail
               </Button>
             </div>

@@ -1,7 +1,7 @@
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { createIcon } from '../create-icon';
 
-export default createIcon('Home', (l) =>
+export default /* @__PURE__ */ createIcon('Home', (l) =>
 	jsxs("svg", {
 	width: 16,
 	height: 16,

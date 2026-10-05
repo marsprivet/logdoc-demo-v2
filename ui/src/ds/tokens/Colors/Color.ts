@@ -1,6 +1,6 @@
 /**
  * Do not edit directly
- * Generated on Mon, 05 Oct 2026 10:39:01 GMT
+ * Generated on Mon, 05 Oct 2026 10:43:31 GMT
  */
 
 export const Color = {
@@ -140,6 +140,30 @@ export const Color = {
 	"BG_GRADIENT_OCEAN": "linear-gradient(99deg, #48F8CF 4.42%, #28CBF3 96.6%)",
 	"BG_GRADIENT_SPLASH": "linear-gradient(99deg, #4568DC 4.42%, #324DAA 96.6%)",
 	"BG_GRADIENT_FLAMINGO": "linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%)",
+	"BG_EMBER_50": "#fff1ec",
+	"BG_EMBER_100": "#ffd8ca",
+	"BG_EMBER_150": "#ffcab7",
+	"BG_EMBER_200": "#ffb89f",
+	"BG_EMBER_300": "#ff9873",
+	"BG_EMBER_400": "#ff7848",
+	"BG_EMBER_500": "#ff4e0e",
+	"BG_EMBER_600": "#d6420c",
+	"BG_EMBER_700": "#a33209",
+	"BG_EMBER_800": "#752406",
+	"BG_EMBER_900": "#471604",
+	"BG_EMBER_950": "#290c02",
+	"BG_GRAPHITE_50": "#f4f4f5",
+	"BG_GRAPHITE_100": "#c6c6ca",
+	"BG_GRAPHITE_200": "#9b9ba1",
+	"BG_GRAPHITE_300": "#7e7e7e",
+	"BG_GRAPHITE_400": "#6a6a6a",
+	"BG_GRAPHITE_500": "#55555e",
+	"BG_GRAPHITE_600": "#45454e",
+	"BG_GRAPHITE_700": "#37373f",
+	"BG_GRAPHITE_800": "#292930",
+	"BG_GRAPHITE_900": "#242429",
+	"BG_GRAPHITE_950": "#1d1d22",
+	"BG_GRAPHITE_1000": "#16151a",
 	"TEXT_ROBIN_50": "#edf1fe",
 	"TEXT_ROBIN_100": "#cad5fd",
 	"TEXT_ROBIN_150": "#cad5fd",
@@ -275,7 +299,31 @@ export const Color = {
 	"TEXT_GRADIENT_DAWN": "linear-gradient(99deg, #7A97FA 4.42%, #F977FF 96.6%)",
 	"TEXT_GRADIENT_OCEAN": "linear-gradient(99deg, #48F8CF 4.42%, #28CBF3 96.6%)",
 	"TEXT_GRADIENT_SPLASH": "linear-gradient(99deg, #4568DC 4.42%, #324DAA 96.6%)",
-	"TEXT_GRADIENT_FLAMINGO": "linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%)"
+	"TEXT_GRADIENT_FLAMINGO": "linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%)",
+	"TEXT_EMBER_50": "#fff1ec",
+	"TEXT_EMBER_100": "#ffd8ca",
+	"TEXT_EMBER_150": "#ffcab7",
+	"TEXT_EMBER_200": "#ffb89f",
+	"TEXT_EMBER_300": "#ff9873",
+	"TEXT_EMBER_400": "#ff7848",
+	"TEXT_EMBER_500": "#ff4e0e",
+	"TEXT_EMBER_600": "#d6420c",
+	"TEXT_EMBER_700": "#a33209",
+	"TEXT_EMBER_800": "#752406",
+	"TEXT_EMBER_900": "#471604",
+	"TEXT_EMBER_950": "#290c02",
+	"TEXT_GRAPHITE_50": "#f4f4f5",
+	"TEXT_GRAPHITE_100": "#c6c6ca",
+	"TEXT_GRAPHITE_200": "#9b9ba1",
+	"TEXT_GRAPHITE_300": "#7e7e7e",
+	"TEXT_GRAPHITE_400": "#6a6a6a",
+	"TEXT_GRAPHITE_500": "#55555e",
+	"TEXT_GRAPHITE_600": "#45454e",
+	"TEXT_GRAPHITE_700": "#37373f",
+	"TEXT_GRAPHITE_800": "#292930",
+	"TEXT_GRAPHITE_900": "#242429",
+	"TEXT_GRAPHITE_950": "#1d1d22",
+	"TEXT_GRAPHITE_1000": "#16151a"
 };
 
 export type ColorType = (typeof Color)[keyof typeof Color];

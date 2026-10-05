@@ -1,6 +1,6 @@
 /**
  * Do not edit directly
- * Generated on Mon, 05 Oct 2026 10:39:01 GMT
+ * Generated on Mon, 05 Oct 2026 10:43:31 GMT
  */
 		
       export const Colors = {
@@ -139,7 +139,31 @@
   "gradient-dawn": "linear-gradient(99deg, #7A97FA 4.42%, #F977FF 96.6%)",
   "gradient-ocean": "linear-gradient(99deg, #48F8CF 4.42%, #28CBF3 96.6%)",
   "gradient-splash": "linear-gradient(99deg, #4568DC 4.42%, #324DAA 96.6%)",
-  "gradient-flamingo": "linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%)"
+  "gradient-flamingo": "linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%)",
+  "ember-50": "#fff1ec",
+  "ember-100": "#ffd8ca",
+  "ember-150": "#ffcab7",
+  "ember-200": "#ffb89f",
+  "ember-300": "#ff9873",
+  "ember-400": "#ff7848",
+  "ember-500": "#ff4e0e",
+  "ember-600": "#d6420c",
+  "ember-700": "#a33209",
+  "ember-800": "#752406",
+  "ember-900": "#471604",
+  "ember-950": "#290c02",
+  "graphite-50": "#f4f4f5",
+  "graphite-100": "#c6c6ca",
+  "graphite-200": "#9b9ba1",
+  "graphite-300": "#7e7e7e",
+  "graphite-400": "#6a6a6a",
+  "graphite-500": "#55555e",
+  "graphite-600": "#45454e",
+  "graphite-700": "#37373f",
+  "graphite-800": "#292930",
+  "graphite-900": "#242429",
+  "graphite-950": "#1d1d22",
+  "graphite-1000": "#16151a"
 } ;
 
 	  export type ColorsType = (typeof Colors)[keyof typeof Colors];

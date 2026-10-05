@@ -1,6 +1,9 @@
 
+/* Primitives, the LogDoc theme, and fonts. The original SigNoz theme
+   (tokens/themes/signoz-tokens.css) is only loaded by Storybook. */
 @import "./tokens/style.css";
-@import "./tokens/themes/signoz-tokens.css";
+@import "./tokens/themes/logdoc-tokens.css";
+@import "./fonts.css";
 
 /* Base styles - replaces Tailwind preflight */
 *,

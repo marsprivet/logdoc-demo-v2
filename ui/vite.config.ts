@@ -10,7 +10,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:9001",
+        // LOGDOC_API points the dev server at another backend, e.g. the
+        // upstream build on :9101 that runs without auth.
+        target: process.env.LOGDOC_API ?? "http://localhost:9001",
         ws: true,
       },
     },

@@ -1,0 +1,109 @@
+/* App-level layout and LogDoc's domain styling, on top of the design system
+   (src/ds/styles.css: tokens, theme, fonts, reset). Everything here reads
+   the ds semantic tokens; only log levels add their own palette below.
+   Anything owned by a single screen lives in that screen's <Name>.css. */
+
+:root {
+  /* Log levels: v1's level hues, expressed through the ds primitives. */
+  --level-debug: var(--bg-graphite-300);
+  --level-info: var(--bg-robin-400);
+  --level-log: var(--bg-forest-400);
+  --level-warn: var(--bg-amber-500);
+  --level-error: var(--bg-ember-400);
+  --level-severe: var(--bg-cherry-500);
+  --level-panic: var(--bg-sakura-500);
+}
+
+/* Reserve the scrollbar's gutter so popups that lock body scroll don't
+   shift the page width. */
+html { scrollbar-gutter: stable; }
+
+body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  background: var(--l1-background);
+  color: var(--l1-foreground);
+}
+
+.wrap { max-width: 1440px; margin: 0 auto; padding: 16px 24px; }
+
+.muted { color: var(--l3-foreground); }
+.accent { color: var(--accent-primary); }
+.mono { font-family: var(--font-mono); }
+
+/* Terminal-style section labels, like "// node type" on logdoc.org. */
+.sect {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--l3-foreground);
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+/* A row of controls (filters, form fields, action bars). */
+.toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Panels: forms, settings, floating cards. */
+.panel {
+  background: var(--l2-background);
+  border: 1px solid var(--l3-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.empty { text-align: center; padding: 30px; }
+
+/* --- data tables (logs, rules, tokens, users) --- */
+.data-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.data-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: lowercase;
+  color: var(--l3-foreground);
+  border-bottom: 1px solid var(--l3-border);
+  padding: 6px 10px;
+}
+.data-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--l2-border);
+  vertical-align: top;
+}
+.data-table .cell-mono { font-family: var(--font-mono); font-size: 12px; }
+.data-table .cell-muted { font-family: var(--font-mono); font-size: 12px; color: var(--l3-foreground); }
+.data-table .cell-ts {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--l3-foreground);
+  white-space: nowrap;
+}
+.data-table .cell-actions { white-space: nowrap; text-align: right; }
+
+/* Text-only actions inside tables and panels ("edit", "delete", "dismiss"). */
+.text-action {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--l3-foreground);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.text-action:hover { color: var(--accent-primary); }
+.text-action + .text-action { margin-left: 10px; }
+
+/* Monospace textarea (rule match JSON) — the ds has no textarea yet. */
+.textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  background: var(--l3-background);
+  border: 1px solid var(--l3-border);
+  color: var(--l1-foreground);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.textarea::placeholder { color: var(--l3-foreground); }
+.textarea:focus { outline: none; border-color: var(--primary-background); }

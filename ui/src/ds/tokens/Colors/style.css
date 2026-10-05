@@ -1,6 +1,6 @@
 /**
  * Do not edit directly
- * Generated on Mon, 05 Oct 2026 10:39:02 GMT
+ * Generated on Mon, 05 Oct 2026 10:43:31 GMT
  */
 
 :root {
@@ -140,6 +140,30 @@
   --bg-gradient-ocean: linear-gradient(99deg, #48F8CF 4.42%, #28CBF3 96.6%);
   --bg-gradient-splash: linear-gradient(99deg, #4568DC 4.42%, #324DAA 96.6%);
   --bg-gradient-flamingo: linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%);
+  --bg-ember-50: #fff1ec;
+  --bg-ember-100: #ffd8ca;
+  --bg-ember-150: #ffcab7;
+  --bg-ember-200: #ffb89f;
+  --bg-ember-300: #ff9873;
+  --bg-ember-400: #ff7848;
+  --bg-ember-500: #ff4e0e;
+  --bg-ember-600: #d6420c;
+  --bg-ember-700: #a33209;
+  --bg-ember-800: #752406;
+  --bg-ember-900: #471604;
+  --bg-ember-950: #290c02;
+  --bg-graphite-50: #f4f4f5;
+  --bg-graphite-100: #c6c6ca;
+  --bg-graphite-200: #9b9ba1;
+  --bg-graphite-300: #7e7e7e;
+  --bg-graphite-400: #6a6a6a;
+  --bg-graphite-500: #55555e;
+  --bg-graphite-600: #45454e;
+  --bg-graphite-700: #37373f;
+  --bg-graphite-800: #292930;
+  --bg-graphite-900: #242429;
+  --bg-graphite-950: #1d1d22;
+  --bg-graphite-1000: #16151a;
   --text-robin-50: #edf1fe;
   --text-robin-100: #cad5fd;
   --text-robin-150: #cad5fd;
@@ -276,4 +300,28 @@
   --text-gradient-ocean: linear-gradient(99deg, #48F8CF 4.42%, #28CBF3 96.6%);
   --text-gradient-splash: linear-gradient(99deg, #4568DC 4.42%, #324DAA 96.6%);
   --text-gradient-flamingo: linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%);
+  --text-ember-50: #fff1ec;
+  --text-ember-100: #ffd8ca;
+  --text-ember-150: #ffcab7;
+  --text-ember-200: #ffb89f;
+  --text-ember-300: #ff9873;
+  --text-ember-400: #ff7848;
+  --text-ember-500: #ff4e0e;
+  --text-ember-600: #d6420c;
+  --text-ember-700: #a33209;
+  --text-ember-800: #752406;
+  --text-ember-900: #471604;
+  --text-ember-950: #290c02;
+  --text-graphite-50: #f4f4f5;
+  --text-graphite-100: #c6c6ca;
+  --text-graphite-200: #9b9ba1;
+  --text-graphite-300: #7e7e7e;
+  --text-graphite-400: #6a6a6a;
+  --text-graphite-500: #55555e;
+  --text-graphite-600: #45454e;
+  --text-graphite-700: #37373f;
+  --text-graphite-800: #292930;
+  --text-graphite-900: #242429;
+  --text-graphite-950: #1d1d22;
+  --text-graphite-1000: #16151a;
 }

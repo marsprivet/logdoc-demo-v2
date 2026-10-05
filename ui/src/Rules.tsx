@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Input } from "@base-ui/react/input";
-import { Button } from "@base-ui/react/button";
+import { Badge } from "@ds/components/badge";
+import { Button } from "@ds/components/button";
+import { Callout } from "@ds/components/callout";
+import { Checkbox } from "@ds/components/checkbox";
+import { ConfirmDialog } from "@ds/components/dialog";
+import { Input } from "@ds/components/input";
+import { SelectSimple } from "@ds/components/select";
+import { Plus } from "@ds/icons";
 import "./Rules.css";
-import Select from "./ui/Select";
-import ConfirmDialog from "./ui/ConfirmDialog";
 
 // Notification rules screen: GET/POST/DELETE /api/v1/notify/rules.
 // Config-file rules are listed read-only; UI rules are editable and persist
@@ -208,7 +212,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
   };
 
   if (!data) {
-    return error ? <div className="error">{error}</div> : <div className="muted">loading…</div>;
+    return error ? <Callout type="error" title={error} /> : <div className="muted">loading…</div>;
   }
 
   if (!data.enabled) {
@@ -216,7 +220,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
       <div className="empty">
         <p className="muted">
           Notifications are disabled: no channel is configured. Add <b>telegram</b>,{" "}
-          <b>webhook</b>, <b>email</b> or <b>kafka</b> to the <span className="accent">notify</span>{" "}
+          <b>webhook</b>, <b>email</b> or <b>kafka</b> to the <span className="accent mono">notify</span>{" "}
           section of the config and restart — then rules can be created right here.
         </p>
       </div>
@@ -227,7 +231,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
 
   return (
     <div className="rules">
-      {error && <div className="error">{error}</div>}
+      {error && <Callout type="error" title={error} />}
 
       <div className="rules-bar">
         <span className="sect">
@@ -235,6 +239,10 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
         </span>
         {!f && canEdit && (
           <Button
+            variant="solid"
+            color="primary"
+            size="md"
+            prefix={<Plus size="md" />}
             onClick={() => {
               setForm({ ...emptyForm });
               setEditing(null);
@@ -247,22 +255,23 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
       </div>
 
       {f && (
-        <div className="rules-form">
+        <div className="panel rules-form">
           <div className="sect">// {editing ? `edit rule: ${editing}` : "new rule"}</div>
-          <div className="filters">
+          <div className="toolbar">
             <Input
               placeholder="name"
               value={f.name}
               disabled={editing !== null}
               onChange={(e) => setForm({ ...f, name: e.target.value })}
             />
-            <Select
+            <SelectSimple
               value={f.type}
-              onValueChange={(v) => setForm({ ...f, type: v })}
-              options={[
+              onChange={(v) => setForm({ ...f, type: v as string })}
+              items={[
                 { value: "error_threshold", label: "error_threshold" },
                 { value: "silence", label: "silence" },
               ]}
+              style={{ width: 170 }}
             />
             <Input
               placeholder={f.type === "silence" ? "app (required)" : "app (optional)"}
@@ -279,14 +288,14 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
               />
             )}
             <Input
-              className="short"
+              containerStyle={{ width: 110 }}
               placeholder="window"
               title="e.g. 1m, 90s (defaults: 1m / 5m for silence)"
               value={f.window}
               onChange={(e) => setForm({ ...f, window: e.target.value })}
             />
             <Input
-              className="short"
+              containerStyle={{ width: 110 }}
               placeholder="cooldown"
               title="minimum pause between alerts (default 5m)"
               value={f.cooldown}
@@ -303,26 +312,29 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
           <div className="rules-channels">
             <span className="muted">channels (empty = all):</span>
             {data.channels.map((c) => (
-              <label key={c} className={f.channels.includes(c) ? "vopt sel" : "vopt"}>
-                <input type="checkbox" checked={f.channels.includes(c)} onChange={() => toggleChannel(c)} />
+              <Checkbox key={c} color="primary" value={f.channels.includes(c)} onChange={() => toggleChannel(c)}>
                 {c}
-              </label>
+              </Checkbox>
             ))}
           </div>
           {f.type === "error_threshold" && (
             <textarea
-              className="rules-match"
+              className="textarea"
               placeholder={MATCH_PLACEHOLDER}
               value={f.matchText}
               onChange={(e) => setForm({ ...f, matchText: e.target.value })}
               spellCheck={false}
             />
           )}
-          {formError && <div className="error">{formError}</div>}
+          {formError && <Callout type="error" title={formError} />}
           <div className="rules-actions">
-            <Button onClick={save}>{editing ? "Save" : "Create"}</Button>
+            <Button variant="solid" color="primary" size="md" onClick={save}>
+              {editing ? "Save" : "Create"}
+            </Button>
             <Button
-              className="tail"
+              variant="ghost"
+              color="secondary"
+              size="md"
               onClick={() => {
                 setForm(null);
                 setEditing(null);
@@ -343,7 +355,7 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
           </p>
         </div>
       ) : (
-        <table>
+        <table className="data-table">
           <thead>
             <tr>
               <th>rule</th>
@@ -361,12 +373,18 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
           <tbody>
             {data.rules.map((r) => (
               <tr key={r.name} className={r.disabled ? "rules-off" : undefined}>
-                <td className="app">
+                <td className="cell-mono">
                   {r.name}
-                  {r.disabled && <span className="field">retired</span>}
+                  {r.disabled && (
+                    <span className="tag">
+                      <Badge variant="outlined" color="secondary">
+                        retired
+                      </Badge>
+                    </span>
+                  )}
                 </td>
-                <td className="src">{r.type}</td>
-                <td className="msg">
+                <td className="cell-muted">{r.type}</td>
+                <td className="cell-mono">
                   {r.match
                     ? matchSummary(r.match)
                     : r.type === "silence"
@@ -374,28 +392,30 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
                       : `${r.app ? `app=${r.app} AND ` : ""}lvl≥ERROR × ${r.threshold}`}
                   {r.match && r.threshold ? ` × ${r.threshold}` : ""}
                   {r.max_fires !== undefined && (
-                    <span className="field">
-                      {r.max_fires === 0 ? "fires once" : `max ${r.max_fires} fires`}
+                    <span className="tag">
+                      <Badge variant="outlined" color="secondary">
+                        {r.max_fires === 0 ? "fires once" : `max ${r.max_fires} fires`}
+                      </Badge>
                     </span>
                   )}
                 </td>
-                <td className="src">{r.window}</td>
-                <td className="src">{r.cooldown}</td>
-                <td className="src">{r.channels?.length ? r.channels.join(", ") : "all"}</td>
-                <td className="src">{r.fires}</td>
-                <td className="ts">
+                <td className="cell-muted">{r.window}</td>
+                <td className="cell-muted">{r.cooldown}</td>
+                <td className="cell-muted">{r.channels?.length ? r.channels.join(", ") : "all"}</td>
+                <td className="cell-muted">{r.fires}</td>
+                <td className="cell-ts">
                   {r.last_fired ? new Date(r.last_fired).toLocaleString() : "—"}
                 </td>
-                <td className="src">{r.source}</td>
-                <td className="rules-rowactions">
+                <td className="cell-muted">{r.source}</td>
+                <td className="cell-actions">
                   {!canEdit ? (
-                    <span className="muted" title="admin role required">
+                    <span className="cell-muted" title="admin role required">
                       read-only
                     </span>
                   ) : r.source === "ui" ? (
                     <>
                       <span
-                        className="clickable"
+                        className="text-action"
                         onClick={() => {
                           setForm(ruleToForm(r));
                           setEditing(r.name);
@@ -404,12 +424,12 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
                       >
                         edit
                       </span>
-                      <span className="clickable" onClick={() => setConfirmDelete(r.name)}>
+                      <span className="text-action" onClick={() => setConfirmDelete(r.name)}>
                         delete
                       </span>
                     </>
                   ) : (
-                    <span className="muted" title="defined in the config file">
+                    <span className="cell-muted" title="defined in the config file">
                       read-only
                     </span>
                   )}
@@ -423,11 +443,14 @@ export default function Rules({ canEdit = true }: { canEdit?: boolean }) {
         open={confirmDelete !== null}
         onOpenChange={(open) => !open && setConfirmDelete(null)}
         title="Delete rule"
-        description={confirmDelete ? `Delete "${confirmDelete}"?` : ""}
-        confirmLabel="Delete"
-        danger
-        onConfirm={() => confirmDelete && remove(confirmDelete)}
-      />
+        confirmText="Delete"
+        confirmColor="danger"
+        onConfirm={() => {
+          if (confirmDelete) void remove(confirmDelete);
+        }}
+      >
+        {confirmDelete ? `Delete "${confirmDelete}"?` : ""}
+      </ConfirmDialog>
     </div>
   );
 }

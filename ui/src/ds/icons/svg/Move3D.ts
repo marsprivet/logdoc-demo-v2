@@ -1,7 +1,7 @@
 import { jsx } from 'react/jsx-runtime';
 import { createIcon } from '../create-icon';
 
-export default createIcon('Move3D', (c) =>
+export default /* @__PURE__ */ createIcon('Move3D', (c) =>
 	jsx("svg", {
 	width: 16,
 	height: 16,

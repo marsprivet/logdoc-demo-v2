@@ -21,6 +21,18 @@ export const globalTypes: Preview["globalTypes"] = {
       dynamicTitle: true,
     },
   },
+  palette: {
+    description: "Token sheet the components read: LogDoc's theme or the original SigNoz one",
+    toolbar: {
+      title: "Palette",
+      icon: "paintbrushalt",
+      items: [
+        { value: "logdoc", title: "LogDoc" },
+        { value: "default", title: "SigNoz (original)" },
+      ],
+      dynamicTitle: true,
+    },
+  },
   motion: {
     description: "Park every animation on its last frame (Still) or watch transitions (Live).",
     toolbar: {
@@ -36,7 +48,7 @@ export const globalTypes: Preview["globalTypes"] = {
 };
 
 const preview: Preview = {
-  initialGlobals: { theme: "dark", palette: "default", motion: "live" },
+  initialGlobals: { theme: "dark", palette: "logdoc", motion: "live" },
   parameters: {
     layout: "centered",
     controls: {

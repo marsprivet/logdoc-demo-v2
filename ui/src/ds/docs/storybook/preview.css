@@ -1,4 +1,6 @@
 @import '../../styles.css';
+/* The original SigNoz palette, for the Palette toolbar's side-by-side check. */
+@import '../../tokens/themes/signoz-tokens.css';
 
 :root {
 	--color-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -6,8 +8,8 @@
 
 /* Improve Storybook UI styling */
 .sb-show-main {
-	background: #0b0c0e; /* Use ink-500 to match story backgrounds */
-	color: #ffffff; /* White text for dark mode */
+	background: var(--l1-background); /* page surface of the active palette */
+	color: var(--l1-foreground);
 	padding: 2rem !important;
 	min-height: 100vh;
 }
@@ -36,7 +38,7 @@
 }
 
 html.dark .docs-story > div:first-of-type {
-	background-color: #0b0c0e !important;
+	background-color: var(--l1-background) !important;
 }
 
 /*
@@ -86,7 +88,7 @@ code {
 /* Ensure dark mode is applied by default */
 
 .dark {
-	background: #0b0c0e;
+	background: var(--l1-background);
 
 	color: var(--text-vanilla-100);
 }
@@ -138,7 +140,7 @@ code {
 /* Dark Mode (when html has .dark class) */
 
 html.dark .sb-show-main {
-	background-color: #0b0c0e !important;
+	background-color: var(--l1-background) !important;
 
 	color: #ffffff !important;
 }

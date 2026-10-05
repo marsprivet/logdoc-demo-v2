@@ -3,15 +3,5 @@
 .access { display: flex; flex-direction: column; gap: 28px; }
 .access section { display: flex; flex-direction: column; gap: 12px; }
 
-.token-fresh {
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 3px;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  font-size: 12px;
-}
-.token-fresh code { color: var(--accent); font-family: var(--mono); user-select: all; }
+.token-fresh { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.token-fresh code { color: var(--l1-foreground); font-family: var(--font-mono); font-size: 12px; user-select: all; }

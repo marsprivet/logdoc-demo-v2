@@ -2,102 +2,49 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 <Meta title="Intro" />
 
-# Signoz Components Library
+# LogDoc Design System
 
-React component library powered by Turborepo, React, and Storybook.
+The components, tokens and icons LogDoc's UI is built from. They live in this
+repository under `ui/src/ds` and are ours to change: the system started as a
+copy of SigNoz's open-source design system (see `ui/src/ds/NOTICE.md`), and
+LogDoc depends on no SigNoz package.
 
-## Install & Use
+## Layout
 
-To use the Signoz components library, you need to install the following packages:
+| Folder | What lives there |
+| --- | --- |
+| `ui/src/ds/components` | React components (Base UI / Radix based, CSS Modules) |
+| `ui/src/ds/tokens` | Token sources (`tokens/*.json`), the generator, and the generated CSS/TS |
+| `ui/src/ds/icons` | 1,600+ icon components (`import { Search } from '@ds/icons'`) |
+| `ui/src/ds/styles.css` | Entry stylesheet: primitives, the LogDoc theme, fonts, reset |
+| `ui/src/components` | LogDoc-specific components composed from the system |
 
-```sh
-pnpm add @signozhq/design-tokens @signozhq/ui
-```
+## Use in the app
 
-In your app's main CSS file (e.g. `index.css` or `global.css`), import the following css:
-
-```css
-@import '@signozhq/design-tokens/dist/style.css';
-@import '@signozhq/design-tokens/dist/themes/signoz-tokens.css';
-```
-
-Then you need to add the data attribute in your element `body` or `html` to select the theme:
-
-```html
-<html lang="en" data-theme="default"></html>
-```
-
-If you want to toggle/change between themes, you just need to update the value of the attribute `data-theme`.
-
-> **tip**: Take a look at [./apps/docs/blue-demo.css](./apps/docs/blue-demo.css) to learn how to create a new theme.
-
-### How to use with Tailwind
-
-In case you want to have our design tokens exposed directly to Tailwind, you can install the following package:
-
-```sh
-pnpm add @signozhq/tailwind-config
-```
-
-And then import the following css:
-
-```css
-@import 'tailwindcss';
-@config "@signozhq/tailwind-config";
-@import '@signozhq/tailwind-config/global.css';
-```
-
-## Storybook
-
-To learn more about the available components, take a look at: https://periscope.signoz.io/
-
-## Available Packages
-
-| Package                     | Description                                                       |
-| --------------------------- | ----------------------------------------------------------------- |
-| `@signozhq/tailwind-config` | Tailwind config, design tokens, and `global.css` (required first) |
-| `@signozhq/ui`              | All UI components (single package with subpath exports)           |
-
-All components live in `@signozhq/ui`. Import by subpath:
+Import each component from its own folder, so the bundle only carries the
+styles of what a screen uses:
 
 ```ts
-import { AlertDialog } from '@ds/components';
-import { AnnouncementBanner } from '@ds/components';
-import { Avatar } from '@ds/components';
-import { Badge } from '@ds/components';
-import { Breadcrumb } from '@ds/components';
-import { Button } from '@ds/components';
-import { ButtonGroup } from '@ds/components';
-import { Calendar } from '@ds/components';
-import { Callout } from '@ds/components';
-import { Checkbox } from '@ds/components';
-import { Combobox } from '@ds/components';
-import { Command } from '@ds/components';
-import { DatePicker } from '@ds/components';
-import { Dialog } from '@ds/components';
-import { Divider } from '@ds/components';
-import { Drawer } from '@ds/components';
-import { Dropdown } from '@ds/components';
-import { Input } from '@ds/components';
-import { InputNumber } from '@ds/components';
-import { Kbd } from '@ds/components';
-import { Pagination } from '@ds/components';
-import { Progress } from '@ds/components';
-import { PinList } from '@ds/components';
-import { Pill } from '@ds/components';
-import { Popover } from '@ds/components';
-import { RadioGroup } from '@ds/components';
-import { ResizablePanelGroup } from '@ds/components';
-import { Select } from '@ds/components';
-import { Skeleton } from '@ds/components';
-import { Slider } from '@ds/components';
-import { Spinner } from '@ds/components';
-import { Switch } from '@ds/components';
-import { Table } from '@ds/components';
-import { Tabs } from '@ds/components';
-import { TextEllipsis } from '@ds/components';
-import { Toaster } from '@ds/components';
-import { ToggleGroup } from '@ds/components';
-import { Tooltip } from '@ds/components';
-import { Typography } from '@ds/components';
+import { Button } from '@ds/components/button';
+import { Search } from '@ds/icons';
 ```
+
+`main.tsx` loads `@ds/styles.css` before anything else, and `index.html` picks
+the theme:
+
+```html
+<html lang="en" data-theme="logdoc" class="dark"></html>
+```
+
+## Change a token
+
+Edit the JSON in `ui/src/ds/tokens/tokens/` and regenerate:
+
+```sh
+npm --prefix ui run tokens
+```
+
+- `color.json`: primitive palettes. LogDoc adds **Ember** (brand orange, `#ff4e0e` at 500) and **Graphite** (its dark greys).
+- `semantic-tokens.json`: the themes. `logdoc` is LogDoc's; `default` is the original SigNoz theme, kept for comparison.
+
+The **Palette** button in the toolbar switches every story between the two.

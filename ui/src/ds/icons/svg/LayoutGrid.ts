@@ -1,7 +1,7 @@
 import { jsx } from 'react/jsx-runtime';
 import { createIcon } from '../create-icon';
 
-export default createIcon('LayoutGrid', (c) =>
+export default /* @__PURE__ */ createIcon('LayoutGrid', (c) =>
 	jsx("svg", {
 	width: 16,
 	height: 16,

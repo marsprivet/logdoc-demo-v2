@@ -1,7 +1,7 @@
 import { jsx } from 'react/jsx-runtime';
 import { createIcon } from '../create-icon';
 
-export default createIcon('RefreshCw', (c) =>
+export default /* @__PURE__ */ createIcon('RefreshCw', (c) =>
 	jsx("svg", {
 	width: 16,
 	height: 16,

@@ -1,7 +1,7 @@
 
 /**
  * Do not edit directly
- * Generated on Mon, 05 Oct 2026 10:39:01 GMT
+ * Generated on Mon, 05 Oct 2026 10:43:31 GMT
  */
 @theme {
   /* Colors */
@@ -141,6 +141,30 @@
   --color-gradient-ocean: linear-gradient(99deg, #48F8CF 4.42%, #28CBF3 96.6%);
   --color-gradient-splash: linear-gradient(99deg, #4568DC 4.42%, #324DAA 96.6%);
   --color-gradient-flamingo: linear-gradient(92deg, #CA9CD0 1.36%, #D38972 68.48%, #A1B1E7 98.99%);
+  --color-ember-50: #fff1ec;
+  --color-ember-100: #ffd8ca;
+  --color-ember-150: #ffcab7;
+  --color-ember-200: #ffb89f;
+  --color-ember-300: #ff9873;
+  --color-ember-400: #ff7848;
+  --color-ember-500: #ff4e0e;
+  --color-ember-600: #d6420c;
+  --color-ember-700: #a33209;
+  --color-ember-800: #752406;
+  --color-ember-900: #471604;
+  --color-ember-950: #290c02;
+  --color-graphite-50: #f4f4f5;
+  --color-graphite-100: #c6c6ca;
+  --color-graphite-200: #9b9ba1;
+  --color-graphite-300: #7e7e7e;
+  --color-graphite-400: #6a6a6a;
+  --color-graphite-500: #55555e;
+  --color-graphite-600: #45454e;
+  --color-graphite-700: #37373f;
+  --color-graphite-800: #292930;
+  --color-graphite-900: #242429;
+  --color-graphite-950: #1d1d22;
+  --color-graphite-1000: #16151a;
 
   /* Spacing */
   --spacing-padding-1: 0.25rem;

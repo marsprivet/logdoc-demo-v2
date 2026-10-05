@@ -1,7 +1,7 @@
 import { jsx } from 'react/jsx-runtime';
 import { createIcon } from '../create-icon';
 
-export default createIcon('CalendarArrowUp', (c) =>
+export default /* @__PURE__ */ createIcon('CalendarArrowUp', (c) =>
 	jsx("svg", {
 	width: 16,
 	height: 16,

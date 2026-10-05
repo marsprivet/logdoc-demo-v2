@@ -9,12 +9,6 @@
 export const FIGMA_FILE = "https://www.figma.com/design/REPLACE_ME/LogDoc-UI-Kit";
 
 export const figmaLinks = {
-  foundations: `${FIGMA_FILE}?node-id=REPLACE_ME`,
-  button: `${FIGMA_FILE}?node-id=REPLACE_ME`,
-  input: `${FIGMA_FILE}?node-id=REPLACE_ME`,
-  select: `${FIGMA_FILE}?node-id=REPLACE_ME`,
-  confirmDialog: `${FIGMA_FILE}?node-id=REPLACE_ME`,
-  chips: `${FIGMA_FILE}?node-id=REPLACE_ME`,
-  tabs: `${FIGMA_FILE}?node-id=REPLACE_ME`,
-  table: `${FIGMA_FILE}?node-id=REPLACE_ME`,
+  levelBadge: `${FIGMA_FILE}?node-id=REPLACE_ME`,
+  searchInput: `${FIGMA_FILE}?node-id=REPLACE_ME`,
 };

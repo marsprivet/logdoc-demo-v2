@@ -24,7 +24,7 @@ for (const file of files) {
 	const runtime = /\bjsxs\(/.test(svg) ? 'jsx, jsxs' : 'jsx';
 	fs.writeFileSync(
 		path.join(outDir, `${name}.ts`),
-		`import { ${runtime} } from 'react/jsx-runtime';\nimport { createIcon } from '../create-icon';\n\nexport default createIcon('${name}', (${rest}) =>\n\t${svg},\n);\n`,
+		`import { ${runtime} } from 'react/jsx-runtime';\nimport { createIcon } from '../create-icon';\n\nexport default /* @__PURE__ */ createIcon('${name}', (${rest}) =>\n\t${svg},\n);\n`,
 	);
 }
 
