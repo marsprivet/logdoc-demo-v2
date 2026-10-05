@@ -22,7 +22,9 @@ header {
   color: var(--l3-foreground);
 }
 /* The ds tab bar draws its own underline; let it sit on the header rule. */
-header > div:has([role="tablist"]) { align-self: flex-end; margin-bottom: -1px; }
+/* Tabs sit centered like the logo; the active underline is pushed down onto
+   the header's bottom rule: (52px header − 1px rule − 32px tab) / 2 + 1px. */
+header > div:has([role="tablist"]) { --tabs-active-slider-offset: 10.5px; }
 /* Pages render below the header, so the tab bar's own (empty) panel is hidden. */
 header [data-slot="tabs-panel"] { display: none; }
 .header-user { margin-left: auto; font-size: 13px; }
@@ -30,7 +32,7 @@ header [data-slot="tabs-panel"] { display: none; }
 /* The map takes the whole viewport under the header. */
 .topo-full {
   height: calc(100vh - 52px);
-  padding: 10px 16px 12px;
+  padding: var(--page-padding);
   display: flex;
   flex-direction: column;
   overflow: hidden;

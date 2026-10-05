@@ -1963,17 +1963,17 @@ export default function Topology({
               value={viewMode}
               onChange={(v) => v && setViewMode(v)}
               items={[
-                { value: "domains", label: "Domains", prefix: <Boxes size="sm" /> },
-                { value: "board", label: "Board", prefix: <LayoutGrid size="sm" /> },
-                { value: "all", label: "All nodes", prefix: <Network size="sm" /> },
+                { value: "domains", label: "Domains", prefix: <Boxes size="md" /> },
+                { value: "board", label: "Board", prefix: <LayoutGrid size="md" /> },
+                { value: "all", label: "All nodes", prefix: <Network size="md" /> },
               ]}
             />
             {expanded && !focus && (
               <Button
                 variant="outlined"
                 color="secondary"
-                size="sm"
-                prefix={<ChevronLeft size="sm" />}
+                size="md"
+                prefix={<ChevronLeft size="md" />}
                 onClick={() => setExpanded(null)}
               >
                 {expanded}
@@ -1984,8 +1984,8 @@ export default function Topology({
                 <Button
                   variant="outlined"
                   color="secondary"
-                  size="sm"
-                  prefix={<ChevronLeft size="sm" />}
+                  size="md"
+                  prefix={<ChevronLeft size="md" />}
                   onClick={() => setFocus(null)}
                 >
                   {focus}
@@ -2003,7 +2003,7 @@ export default function Topology({
                 <Button
                   variant={hideInfra ? "ghost" : "outlined"}
                   color="secondary"
-                  size="sm"
+                  size="md"
                   onClick={() => setHideInfra((v) => !v)}
                 >
                   infra
@@ -2017,8 +2017,8 @@ export default function Topology({
             <Button
               variant={showChanges ? "outlined" : "ghost"}
               color="secondary"
-              size="sm"
-              prefix={<FileClock size="sm" />}
+              size="md"
+              prefix={<FileClock size="md" />}
               onClick={() => setShowChanges((v) => !v)}
             >
               Changes
@@ -2029,7 +2029,7 @@ export default function Topology({
                 sideOffset={6}
                 className="logs-menu"
                 trigger={
-                  <Button variant="ghost" color="secondary" size="sm" prefix={<Download size="sm" />}>
+                  <Button variant="ghost" color="secondary" size="md" prefix={<Download size="md" />}>
                     Export
                   </Button>
                 }
@@ -2077,8 +2077,8 @@ export default function Topology({
                     <Button
                       variant="outlined"
                       color="secondary"
-                      size="sm"
-                      prefix={<Download size="sm" />}
+                      size="md"
+                      prefix={<Download size="md" />}
                       onClick={() => setProjectTitle("")}
                     >
                       Download
@@ -2087,8 +2087,8 @@ export default function Topology({
                       <Button
                         variant="ghost"
                         color="secondary"
-                        size="sm"
-                        prefix={<FolderOpen size="sm" />}
+                        size="md"
+                        prefix={<FolderOpen size="md" />}
                         onClick={() => projFileRef.current?.click()}
                       >
                         Open…
@@ -2176,8 +2176,8 @@ export default function Topology({
                         key={v}
                         variant="solid"
                         color="danger"
-                        size="sm"
-                        prefix={<Skull size="sm" />}
+                        size="md"
+                        prefix={<Skull size="md" />}
                         onClick={() => setSim(null)}
                       >
                         {v}
@@ -2187,7 +2187,7 @@ export default function Topology({
                         key={v}
                         variant="outlined"
                         color="secondary"
-                        size="sm"
+                        size="md"
                         onClick={() => setSim({ key: plane, val: v })}
                       >
                         {v}
@@ -2430,8 +2430,8 @@ export default function Topology({
                     <Button
                       variant="solid"
                       color="primary"
-                      size="sm"
-                      prefix={<ScrollText size="sm" />}
+                      size="md"
+                      prefix={<ScrollText size="md" />}
                       onClick={() => onOpenLogs(selNode.app, false)}
                     >
                       Logs
@@ -2439,8 +2439,8 @@ export default function Topology({
                     <Button
                       variant="outlined"
                       color="secondary"
-                      size="sm"
-                      prefix={<Play size="sm" />}
+                      size="md"
+                      prefix={<Play size="md" />}
                       onClick={() => onOpenLogs(selNode.app, true)}
                     >
                       Live tail
@@ -2451,16 +2451,16 @@ export default function Topology({
                   <Button
                     variant="outlined"
                     color="secondary"
-                    size="sm"
-                    prefix={<Crosshair size="sm" />}
+                    size="md"
+                    prefix={<Crosshair size="md" />}
                     onClick={() => setFocus(selNode.app)}
                   >
                     Focus
                   </Button>
                 )}
                 {canEdit && !metaForm && selMeta?.source !== "config" && (
-                  <Button variant="ghost" color="secondary" size="sm" icon aria-label="Edit catalog entry" onClick={openMetaForm}>
-                    <Pencil size="sm" />
+                  <Button variant="ghost" color="secondary" size="md" icon aria-label="Edit catalog entry" onClick={openMetaForm}>
+                    <Pencil size="md" />
                   </Button>
                 )}
               </div>
@@ -2532,10 +2532,10 @@ export default function Topology({
                   />
                   {metaForm.error && <Callout type="error" title={metaForm.error} />}
                   <div className="topo-actions">
-                    <Button variant="solid" color="primary" size="sm" onClick={saveMeta}>
+                    <Button variant="solid" color="primary" size="md" onClick={saveMeta}>
                       Save
                     </Button>
-                    <Button variant="ghost" color="secondary" size="sm" onClick={() => setMetaForm(null)}>
+                    <Button variant="ghost" color="secondary" size="md" onClick={() => setMetaForm(null)}>
                       Cancel
                     </Button>
                   </div>
@@ -2840,8 +2840,8 @@ export default function Topology({
                 <Button
                   variant="solid"
                   color="primary"
-                  size="sm"
-                  prefix={<ScrollText size="sm" />}
+                  size="md"
+                  prefix={<ScrollText size="md" />}
                   onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, false)}
                 >
                   Logs
@@ -2849,8 +2849,8 @@ export default function Topology({
                 <Button
                   variant="outlined"
                   color="secondary"
-                  size="sm"
-                  prefix={<Play size="sm" />}
+                  size="md"
+                  prefix={<Play size="md" />}
                   onClick={() => onOpenLogs(`${selEdge.src},${selEdge.dst}`, true)}
                 >
                   Live tail

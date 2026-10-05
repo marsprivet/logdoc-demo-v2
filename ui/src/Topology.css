@@ -144,8 +144,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 24px;
-  padding: 0 8px;
+  height: 32px; /* same as ds Button md and ToggleGroup */
+  padding: 0 10px;
   border: 1px solid var(--l3-border);
   border-radius: var(--radius);
   background: var(--l2-background);
@@ -189,19 +189,26 @@
   flex-direction: column;
 }
 .topo-tail-resize { position: absolute; top: -4px; left: 0; right: 0; height: 9px; cursor: ns-resize; }
+/* Tabs run the full height of the head so the active underline sits on its
+   bottom rule. */
 .topo-tail-head {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 4px;
-  padding: 4px 6px 4px 10px;
+  min-height: 34px;
+  padding: 0 6px 0 10px;
   border-bottom: 1px solid var(--l2-border);
   color: var(--l1-foreground);
 }
+.topo-tail-head > :not(.topo-tail-tabs) { align-self: center; }
 .topo-tail-head .accent { color: var(--accent-primary); }
 .topo-tail-live { color: var(--bg-green-400); margin-left: 4px; }
-.topo-tail-tabs { margin-left: 12px; display: inline-flex; gap: 2px; }
+.topo-tail-tabs { margin-left: 12px; display: inline-flex; align-items: stretch; gap: 2px; }
 .topo-tail-tab {
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  margin-bottom: -1px;
   border-radius: 5px 5px 0 0;
   color: var(--l3-foreground);
   cursor: pointer;

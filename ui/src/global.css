@@ -27,7 +27,9 @@ body {
   color: var(--l1-foreground);
 }
 
-.wrap { max-width: 1440px; margin: 0 auto; padding: 16px 24px; }
+/* One page gutter for every screen (Logs, Topology, Rules, Access). */
+:root { --page-padding: 16px 24px; }
+.wrap { padding: var(--page-padding); }
 
 .muted { color: var(--l3-foreground); }
 .accent { color: var(--accent-primary); }
