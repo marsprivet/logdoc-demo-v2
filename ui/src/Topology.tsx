@@ -2234,7 +2234,17 @@ export default function Topology({
         })()}
       </div>
       {error && <Callout type="error" title={error} />}
-      <div className="topo-body">
+      {/* Zoom and the hint keep clear of what covers the map's bottom-right:
+          the docked tail (bottom) and the right-hand card drawer (right). */}
+      <div
+        className="topo-body"
+        style={
+          {
+            "--overlay-bottom": `${(!VIEWER && tailFor ? tailHeight : 0) + 12}px`,
+            "--overlay-right": (selNode && selNode.kind !== "group") || selEdge ? "var(--drawer-inset)" : "12px",
+          } as React.CSSProperties
+        }
+      >
         <canvas
           ref={canvasRef}
           className="topo-canvas"
@@ -2743,7 +2753,7 @@ export default function Topology({
           )}
         </DrawerWrapper>
 
-        <div className="topo-zoom" style={{ bottom: tailFor ? tailHeight + 20 : 12 }}>
+        <div className="topo-zoom">
           <Button
             variant="outlined"
             color="secondary"
@@ -2776,7 +2786,9 @@ export default function Topology({
           <div className="topo-tail" style={{ height: tailHeight }}>
             <div className="topo-tail-resize" onPointerDown={startTailResize} />
             <div className="topo-tail-head">
-              <span className="accent">$</span> tail <span className="topo-tail-live">● live</span>
+              <span className="topo-tail-title">
+                <span className="accent">$</span> tail <span className="topo-tail-live">● live</span>
+              </span>
               <span className="topo-tail-tabs">
                 {tails.map((app) => (
                   <span

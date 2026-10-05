@@ -19,10 +19,16 @@
   border-radius: 10px;
   display: block;
 }
+/* --overlay-bottom / --overlay-right are set inline on .topo-body from the
+   tail height and whether the right drawer is open. A narrow drawer is
+   24rem wide and fixed to the viewport edge, past the 24px page gutter. */
+.topo-body { --drawer-inset: calc(24rem - 24px + 12px); }
 .topo-hint {
   position: absolute;
-  right: 56px;
-  bottom: 10px;
+  right: calc(var(--overlay-right, 12px) + 44px);
+  bottom: var(--overlay-bottom, 12px);
+  z-index: 60;
+  transition: right 0.2s, bottom 0.2s;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--l3-foreground);
@@ -168,8 +174,10 @@
 /* --- zoom buttons --- */
 .topo-zoom {
   position: absolute;
-  right: 12px;
-  z-index: 60;
+  right: var(--overlay-right, 12px);
+  bottom: var(--overlay-bottom, 12px);
+  z-index: 75;
+  transition: right 0.2s, bottom 0.2s;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -202,6 +210,7 @@
 }
 .topo-tail-head > :not(.topo-tail-tabs) { align-self: center; }
 .topo-tail-head .accent { color: var(--accent-primary); }
+.topo-tail-title { white-space: nowrap; }
 .topo-tail-live { color: var(--bg-green-400); margin-left: 4px; }
 .topo-tail-tabs { margin-left: 12px; display: inline-flex; align-items: stretch; gap: 2px; }
 .topo-tail-tab {
