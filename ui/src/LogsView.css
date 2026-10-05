@@ -38,17 +38,90 @@
 
 .stat { margin: 10px 0 0; font-size: 12px; font-family: var(--font-mono); }
 
+/* Log table, after SigNoz's logs explorer: rows sit on the page background,
+   a level-colored bar leads each row, and hovering tints the row with its
+   level. --log-font-size comes from the View settings (13px default, the
+   SigNoz "medium" tier: 13/20 with 0.3rem cell padding ≈ 30px rows). */
+.logs {
+  --log-font-size: 13px;
+  --log-line-height: calc(var(--log-font-size) + 7px);
+  --log-cell-padding: 0.3rem;
+  margin-top: 12px;
+}
+.logs th,
+.logs td {
+  padding: var(--log-cell-padding) 10px;
+  font-family: var(--font-mono);
+  font-size: var(--log-font-size);
+  line-height: var(--log-line-height);
+  letter-spacing: -0.07px;
+  border-bottom: none;
+}
+.logs th {
+  height: 36px;
+  color: var(--l1-foreground);
+  text-transform: none;
+  border-bottom: 1px solid var(--l2-border);
+}
+.logs td { color: var(--l2-foreground); }
+
+/* Level indicator: a 3px rounded bar, 8px clear of either side. */
+.logs .cell-level {
+  --level-color: var(--level-debug);
+  position: relative;
+  width: 19px;
+  padding: 0;
+}
+.logs td.cell-level::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: var(--log-cell-padding);
+  bottom: var(--log-cell-padding);
+  width: 3px;
+  border-radius: 50px;
+  background: var(--level-color);
+}
+.logs [data-level="INFO"] { --level-color: var(--level-info); }
+.logs [data-level="LOG"] { --level-color: var(--level-log); }
+.logs [data-level="WARN"] { --level-color: var(--level-warn); }
+.logs [data-level="ERROR"] { --level-color: var(--level-error); }
+.logs [data-level="SEVERE"] { --level-color: var(--level-severe); }
+.logs [data-level="PANIC"] { --level-color: var(--level-panic); }
+
+/* No tint at rest; hover paints the row in its level at 25%. */
+.logs tr.row { cursor: default; }
+.logs tr.row:hover td {
+  background: color-mix(in srgb, var(--row-level), transparent 75%);
+}
+.logs tr.row { --row-level: var(--level-debug); }
+.logs tr.row.INFO { --row-level: var(--level-info); }
+.logs tr.row.LOG { --row-level: var(--level-log); }
+.logs tr.row.WARN { --row-level: var(--level-warn); }
+.logs tr.row.ERROR { --row-level: var(--level-error); }
+.logs tr.row.SEVERE { --row-level: var(--level-severe); }
+.logs tr.row.PANIC { --row-level: var(--level-panic); }
+
+/* Win over global.css's 12px .data-table cell helpers. */
+.logs .cell-ts,
+.logs .cell-mono,
+.logs .cell-muted { font-size: var(--log-font-size); }
+.logs .cell-ts { color: var(--l3-foreground); white-space: nowrap; }
+
 /* Message cell and its key=value fields. */
-.logs .msg { white-space: pre-wrap; word-break: break-word; font-family: var(--font-mono); font-size: 12px; }
+.logs .msg { white-space: pre-wrap; word-break: break-word; color: var(--l1-foreground); }
 .logs .field {
   display: inline-block;
   margin-left: 8px;
-  padding: 1px 6px;
+  padding: 0 6px;
   border-radius: var(--radius);
   background: var(--l2-background);
   border: 1px solid var(--l3-border);
   color: var(--l3-foreground);
-  font-size: 11px;
+  font-size: calc(var(--log-font-size) - 2px);
+  line-height: calc(var(--log-line-height) - 4px);
+  vertical-align: top;
+  margin-top: 1px;
 }
 
 /* Click a cell or field to add it as a filter. */
@@ -56,24 +129,29 @@
 .logs .filterable:hover { color: var(--accent-primary); }
 .logs .field.filterable:hover { border-color: var(--accent-primary); }
 
-/* Whole-row level tint, as in the v1 client. */
-.logs tr.row { --row-tint: transparent; }
-.logs tr.row td { background: var(--row-tint); }
-.logs tr.row.DEBUG { --row-tint: color-mix(in srgb, var(--l3-background), transparent 40%); }
-.logs tr.row.INFO { --row-tint: color-mix(in srgb, var(--level-info), transparent 88%); }
-.logs tr.row.LOG { --row-tint: color-mix(in srgb, var(--level-log), transparent 90%); }
-.logs tr.row.WARN { --row-tint: color-mix(in srgb, var(--level-warn), transparent 88%); }
-.logs tr.row.ERROR { --row-tint: color-mix(in srgb, var(--level-error), transparent 82%); }
-.logs tr.row.SEVERE { --row-tint: color-mix(in srgb, var(--level-severe), transparent 78%); }
-.logs tr.row.PANIC { --row-tint: color-mix(in srgb, var(--level-panic), transparent 75%); }
+/* Compact density: no vertical padding. */
+.logs.compact { --log-cell-padding: 0px; }
 
-/* Compact density: tighter rows. */
-.logs.compact td { padding: 3px 10px; }
-.logs.compact .level-badge { padding: 0 6px; }
-
-/* Consecutive (app, src, lvl) grouping. */
-.group-toggle { display: inline-block; margin-left: 8px; vertical-align: middle; }
-.logs tr.grouped td { border-bottom-style: dashed; }
+/* Consecutive (app, src, lvl) grouping: an inline count that fits the line. */
+.group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+  padding: 0 6px;
+  vertical-align: top;
+  margin-top: 1px;
+  height: calc(var(--log-line-height) - 2px);
+  border: 1px solid var(--l3-border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--l3-foreground);
+  font-family: var(--font-mono);
+  font-size: calc(var(--log-font-size) - 2px);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.group-toggle:hover { color: var(--accent-primary); border-color: var(--accent-primary); }
 .logs tr.ellipsis { cursor: pointer; }
-.logs tr.ellipsis td { font-size: 11px; padding: 4px 10px; }
-.logs tr.ellipsis:hover td { color: var(--l1-foreground); }
+.logs tr.ellipsis td.cell-muted { font-size: calc(var(--log-font-size) - 2px); color: var(--l3-foreground); }
+.logs tr.ellipsis:hover td.cell-muted { color: var(--l1-foreground); }

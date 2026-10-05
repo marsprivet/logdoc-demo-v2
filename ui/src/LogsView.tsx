@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import { Button } from "@ds/components/button";
 import { Callout } from "@ds/components/callout";
 import { Checkbox } from "@ds/components/checkbox";
@@ -60,7 +60,7 @@ const DEFAULT_VIEW: ViewConfig = {
   showSrc: true,
   showFields: true,
   density: "full",
-  fontSize: 12,
+  fontSize: 13,
 };
 
 function loadView(): ViewConfig {
@@ -341,29 +341,21 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
   }
 
   const fmtTs = (ts: string) => new Date(ts).toLocaleString();
-  const monoStyle = { fontSize: view.fontSize };
-
   const renderCells = (e: Entry, extra?: ReactElement) => (
     <>
-      {view.showTime && (
-        <td className="cell-ts" style={monoStyle}>
-          {fmtTs(e.ts)}
-        </td>
-      )}
-      <td>
-        <LevelBadge level={e.lvl} />
-      </td>
+      <td className="cell-level" data-level={e.lvl} title={e.lvl} aria-label={e.lvl} />
+      {view.showTime && <td className="cell-ts">{fmtTs(e.ts)}</td>}
       {view.showApp && (
-        <td className="cell-mono filterable" style={monoStyle} onClick={() => e.app && addChip({ kind: "app", value: e.app })} title="filter by app">
+        <td className="cell-mono filterable" onClick={() => e.app && addChip({ kind: "app", value: e.app })} title="filter by app">
           {e.app}
         </td>
       )}
       {view.showSrc && (
-        <td className="cell-muted filterable" style={monoStyle} onClick={() => e.src && addChip({ kind: "src", value: e.src })} title="filter by source">
+        <td className="cell-muted filterable" onClick={() => e.src && addChip({ kind: "src", value: e.src })} title="filter by source">
           {e.src}
         </td>
       )}
-      <td className="msg" style={monoStyle}>
+      <td className="msg">
         {e.msg}
         {view.showFields &&
           e.fields &&
@@ -554,11 +546,14 @@ export default function LogsView({ request }: { request: LogsRequest | null }) {
         </div>
       )}
 
-      <table className={view.density === "compact" ? "data-table logs compact" : "data-table logs"}>
+      <table
+        className={view.density === "compact" ? "data-table logs compact" : "data-table logs"}
+        style={{ "--log-font-size": `${view.fontSize}px` } as CSSProperties}
+      >
         <thead>
           <tr>
+            <th className="cell-level" aria-label="level" />
             {view.showTime && <th>time</th>}
-            <th>lvl</th>
             {view.showApp && <th>app</th>}
             {view.showSrc && <th>src</th>}
             <th>message</th>
@@ -605,17 +600,10 @@ function GroupRows({
   const { head, rest } = group;
   const badge =
     rest.length > 0 ? (
-      <span className="group-toggle">
-        <Button
-          variant="outlined"
-          color="secondary"
-          size="sm"
-          prefix={open ? <Minus size="sm" /> : <Plus size="sm" />}
-          onClick={toggle}
-        >
-          {String(rest.length + 1)}
-        </Button>
-      </span>
+      <button type="button" className="group-toggle" onClick={toggle} title={open ? "collapse" : "expand"}>
+        {open ? <Minus size="sm" /> : <Plus size="sm" />}
+        {rest.length + 1}
+      </button>
     ) : undefined;
   return (
     <>
@@ -628,7 +616,8 @@ function GroupRows({
         ))}
       {!open && rest.length > 0 && (
         <tr className={`row ${head.lvl} grouped ellipsis`} onClick={toggle}>
-          <td colSpan={colCount} className="cell-muted">
+          <td className="cell-level" data-level={head.lvl} />
+          <td colSpan={colCount - 1} className="cell-muted">
             ⋯ {rest.length} more from {head.app}/{head.src}
           </td>
         </tr>
