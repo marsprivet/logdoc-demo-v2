@@ -1,10 +1,17 @@
-/* App.tsx: header (logo, version, page tabs, signed-in user). */
+/* App.tsx: the sticky header (logo, version, page tabs, signed-in user),
+   the full-viewport topology frame, and the snapshot-viewer chrome. */
 
 header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
   display: flex;
   align-items: center;
   gap: 18px;
-  margin-bottom: 14px;
+  height: 52px;
+  padding: 0 24px;
+  background: color-mix(in srgb, var(--l1-background), transparent 5%);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--l3-border);
 }
 .logo { height: 26px; display: block; }
@@ -15,5 +22,42 @@ header {
   color: var(--l3-foreground);
 }
 /* The ds tab bar draws its own underline; let it sit on the header rule. */
-header > [role="tablist"], header > div:has(> [role="tablist"]) { margin-bottom: -1px; }
+header > div:has([role="tablist"]) { align-self: flex-end; margin-bottom: -1px; }
+/* Pages render below the header, so the tab bar's own (empty) panel is hidden. */
+header [data-slot="tabs-panel"] { display: none; }
 .header-user { margin-left: auto; font-size: 13px; }
+
+/* The map takes the whole viewport under the header. */
+.topo-full {
+  height: calc(100vh - 52px);
+  padding: 10px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- snapshot viewer (shared HTML export) --- */
+.viewer-proj {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--l1-foreground);
+  border-left: 1px solid var(--l3-border);
+  padding-left: 14px;
+}
+.viewer-promo { margin-left: auto; text-decoration: none; }
+.viewer-badge {
+  position: fixed;
+  left: 16px;
+  bottom: 14px;
+  z-index: 90;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--l3-foreground);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--l1-background), transparent 8%);
+  border: 1px solid var(--l3-border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.viewer-badge:hover { color: var(--accent-primary); border-color: var(--accent-primary); }

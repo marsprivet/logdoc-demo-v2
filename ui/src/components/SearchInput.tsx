@@ -15,7 +15,7 @@ export default function SearchInput({
   onValueChange: (value: string) => void;
   placeholder?: string;
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
-  width?: number;
+  width?: number | string;
 }) {
   return (
     <Input

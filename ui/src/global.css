@@ -108,3 +108,27 @@ body {
 }
 .textarea::placeholder { color: var(--l3-foreground); }
 .textarea:focus { outline: none; border-color: var(--primary-background); }
+
+/* --- toolbar popover menus (logs table settings/export, topology export) --- */
+.logs-menu { width: 240px; padding: 0; }
+
+.menu-section { padding: 12px 16px; }
+.menu-section + .menu-section,
+.menu-footer { border-top: 1px solid var(--l2-border); }
+
+.menu-title {
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--l1-foreground);
+}
+
+.menu-options { display: flex; flex-direction: column; gap: 10px; }
+
+.menu-footer { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.menu-note { font-family: var(--font-mono); font-size: 11px; color: var(--l3-foreground); }
+.menu-links { display: flex; flex-direction: column; gap: 8px; }
+.menu-links .text-action + .text-action { margin-left: 0; }
+.menu-actions { display: flex; gap: 6px; margin-top: 8px; }

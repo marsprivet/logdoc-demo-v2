@@ -4,7 +4,6 @@ import { Checkbox } from "@ds/components/checkbox";
 import { PopoverSimple } from "@ds/components/popover";
 import { RadioGroup } from "@ds/components/radio-group";
 import { Download, SlidersVertical } from "@ds/icons";
-import "./LogsViewMenus.css";
 
 // The log table's toolbar menus, after SigNoz's logs explorer: one button
 // for table options (font size, density, columns) and one for export.
