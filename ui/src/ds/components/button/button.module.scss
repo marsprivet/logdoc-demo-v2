@@ -286,12 +286,12 @@
 			filter: blur(var(--button-ghost-glow-blur, 6px));
 			background: var(--button-ghost-glow-background,
 			linear-gradient(90deg,
-							color-mix(in srgb, var(--bg-cherry-400) var(--button-internal-ghost-glow-opacity), transparent),
-							color-mix(in srgb, var(--bg-amber-500) var(--button-internal-ghost-glow-opacity), transparent),
-							color-mix(in srgb, var(--bg-forest-400) var(--button-internal-ghost-glow-opacity), transparent),
-							color-mix(in srgb, var(--bg-aqua-400) var(--button-internal-ghost-glow-opacity), transparent),
-							color-mix(in srgb, var(--bg-robin-400) var(--button-internal-ghost-glow-opacity), transparent),
-							color-mix(in srgb, var(--bg-cherry-400) var(--button-internal-ghost-glow-opacity), transparent)));
+							color-mix(in srgb, var(--bg-red-400) var(--button-internal-ghost-glow-opacity), transparent),
+							color-mix(in srgb, var(--bg-yellow-500) var(--button-internal-ghost-glow-opacity), transparent),
+							color-mix(in srgb, var(--bg-green-400) var(--button-internal-ghost-glow-opacity), transparent),
+							color-mix(in srgb, var(--bg-blue-400) var(--button-internal-ghost-glow-opacity), transparent),
+							color-mix(in srgb, var(--bg-blue-400) var(--button-internal-ghost-glow-opacity), transparent),
+							color-mix(in srgb, var(--bg-red-400) var(--button-internal-ghost-glow-opacity), transparent)));
 			// Twice the width so the gradient can slide a full period and wrap on itself.
 			background-size: var(--button-ghost-glow-background-size, 200% 100%);
 			transition: opacity var(--button-ghost-glow-fade, 600ms ease);

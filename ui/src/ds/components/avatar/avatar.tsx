@@ -10,14 +10,12 @@ export type AvatarColor =
 	| 'success'
 	| 'error'
 	| 'warning'
-	| 'robin'
-	| 'forest'
-	| 'amber'
-	| 'sienna'
-	| 'cherry'
-	| 'sakura'
-	| 'aqua'
-	| 'vanilla';
+	| 'blue'
+	| 'green'
+	| 'yellow'
+	| 'orange'
+	| 'red'
+	| 'grey';
 
 export interface AvatarProps extends Pick<
 	React.ComponentProps<'span'>,
@@ -33,11 +31,11 @@ export interface AvatarProps extends Pick<
 }
 
 const colorMap: Record<string, string> = {
-	success: 'forest',
-	warning: 'amber',
-	error: 'cherry',
-	primary: 'robin',
-	secondary: 'vanilla',
+	success: 'green',
+	warning: 'yellow',
+	error: 'red',
+	primary: 'primary',
+	secondary: 'grey',
 };
 
 export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(

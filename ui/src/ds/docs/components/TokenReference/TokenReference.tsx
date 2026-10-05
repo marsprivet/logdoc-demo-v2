@@ -6,7 +6,8 @@ import styles from './TokenReference.module.css';
 import { TokenSearch } from './TokenSearch.js';
 import { TokenTable } from './TokenTable.js';
 
-type ThemeMode = 'light' | 'dark';
+// LogDoc ships a dark theme only.
+type ThemeMode = 'dark';
 
 export type SemanticTokenGroup =
 	| 'surface-levels'
@@ -23,7 +24,6 @@ export type SemanticTokenGroup =
 export interface TokenReferenceProps {
 	groups?: SemanticTokenGroup[];
 	mode?: 'semantic' | 'primitive' | 'all';
-	showThemeToggle?: boolean;
 	showSearch?: boolean;
 	showCategoryFilter?: boolean;
 	showModeTabs?: boolean;
@@ -56,7 +56,7 @@ function getTokenMetadata(token: TokenValue): Omit<TokenWithMetadata, 'value'> {
 }
 
 function parseSemanticTokens(mode: ThemeMode): TokenData[] {
-	const themeTokens = semanticTokens.default?.[mode]?.tokens;
+	const themeTokens = semanticTokens.logdoc?.[mode]?.tokens;
 	if (!themeTokens) return [];
 
 	return Object.entries(themeTokens).map(([name, token]) => ({
@@ -160,7 +160,6 @@ export const GROUP_DESCRIPTIONS: Record<string, string> = {
 export function TokenReference({
 	groups,
 	mode = 'all',
-	showThemeToggle = true,
 	showSearch = true,
 	showCategoryFilter = true,
 	showModeTabs = true,
@@ -168,7 +167,7 @@ export function TokenReference({
 	title = 'Token Reference',
 	description = 'Design tokens for building consistent UI',
 }: TokenReferenceProps) {
-	const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+	const themeMode: ThemeMode = 'dark';
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 	const [activeSection, setActiveSection] = useState<'semantic' | 'primitive'>(
@@ -295,32 +294,6 @@ export function TokenReference({
 						{selectedCategory && ` in ${selectedCategory}`}
 					</Typography>
 
-					{showThemeToggle && (
-						<div className={styles.themeToggle}>
-							<div className={styles.themeButtons}>
-								<Button
-									type="button"
-									onClick={() => setThemeMode('light')}
-									{...(themeMode === 'light'
-										? { variant: 'solid', color: 'primary' }
-										: { variant: 'ghost', color: 'secondary' })}
-									size="md"
-								>
-									Light
-								</Button>
-								<Button
-									type="button"
-									onClick={() => setThemeMode('dark')}
-									{...(themeMode === 'dark'
-										? { variant: 'solid', color: 'primary' }
-										: { variant: 'ghost', color: 'secondary' })}
-									size="md"
-								>
-									Dark
-								</Button>
-							</div>
-						</div>
-					)}
 				</div>
 
 				<div className={styles.tokenGroups}>

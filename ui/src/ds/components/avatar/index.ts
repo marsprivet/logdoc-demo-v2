@@ -6,25 +6,23 @@
  * | Token | Default |
  * |-------|---------|
  * | `--avatar-align-items` | `center` |
- * | `--avatar-amber-background` | `var(--accent-amber)` |
- * | `--avatar-amber-foreground` | `var(--accent-amber-foreground)` |
- * | `--avatar-aqua-background` | `var(--accent-aqua)` |
- * | `--avatar-aqua-foreground` | `var(--accent-aqua-foreground)` |
- * | `--avatar-cherry-background` | `var(--accent-cherry)` |
- * | `--avatar-cherry-foreground` | `var(--accent-cherry-foreground)` |
+ * | `--avatar-yellow-background` | `var(--accent-yellow)` |
+ * | `--avatar-yellow-foreground` | `var(--accent-yellow-foreground)` |
+ * | `--avatar-blue-background` | `var(--accent-blue)` |
+ * | `--avatar-blue-foreground` | `var(--accent-blue-foreground)` |
+ * | `--avatar-red-background` | `var(--accent-red)` |
+ * | `--avatar-red-foreground` | `var(--accent-red-foreground)` |
  * | `--avatar-display` | `inline-flex` |
- * | `--avatar-forest-background` | `var(--accent-forest)` |
- * | `--avatar-forest-foreground` | `var(--accent-forest-foreground)` |
+ * | `--avatar-green-background` | `var(--accent-green)` |
+ * | `--avatar-green-foreground` | `var(--accent-green-foreground)` |
  * | `--avatar-justify-content` | `center` |
  * | `--avatar-overflow` | `hidden` |
- * | `--avatar-robin-background` | `var(--primary)` |
- * | `--avatar-robin-foreground` | `var(--primary-foreground)` |
- * | `--avatar-sakura-background` | `var(--accent-sakura)` |
- * | `--avatar-sakura-foreground` | `var(--accent-sakura-foreground)` |
+ * | `--avatar-primary-background` | `var(--primary)` |
+ * | `--avatar-primary-foreground` | `var(--primary-foreground)` |
+ * | `--avatar-orange-background` | `var(--accent-orange)` |
+ * | `--avatar-orange-foreground` | `var(--accent-orange-foreground)` |
  * | `--avatar-shape-circle-border-radius` | `9999px` |
  * | `--avatar-shape-square-border-radius` | `var(--radius-md, 6px)` |
- * | `--avatar-sienna-background` | `var(--accent-sienna)` |
- * | `--avatar-sienna-foreground` | `var(--accent-sienna-foreground)` |
  * | `--avatar-size-lg-font-size` | `16px` |
  * | `--avatar-size-lg-height` | `40px` |
  * | `--avatar-size-lg-width` | `40px` |
@@ -38,8 +36,8 @@
  * | `--avatar-size-xl-height` | `48px` |
  * | `--avatar-size-xl-width` | `48px` |
  * | `--avatar-skeleton-background` | `var(--l2-background, #e5e7eb)` |
- * | `--avatar-vanilla-background` | `var(--l2-background)` |
- * | `--avatar-vanilla-foreground` | `var(--l2-foreground)` |
+ * | `--avatar-grey-background` | `var(--l2-background)` |
+ * | `--avatar-grey-foreground` | `var(--l2-foreground)` |
  */
 // #endregion css-tokens
 

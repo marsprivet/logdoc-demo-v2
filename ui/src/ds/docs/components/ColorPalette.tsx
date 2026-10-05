@@ -19,8 +19,9 @@ function getContrastTextColor(hexColor: string): string {
 
 function ColorPalette() {
 	// Accent colors configuration
-	const primaryAccents = ['robin'];
-	const secondaryAccents = ['forest', 'amber', 'cherry', 'aqua', 'sakura', 'sienna'];
+	const primaryAccents = ['primary'];
+	// Status indicators.
+	const secondaryAccents = ['yellow', 'orange', 'green', 'blue', 'red'];
 
 	// Get accent color data
 	const getAccentColor = (colorName: string) => {

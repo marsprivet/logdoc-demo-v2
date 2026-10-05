@@ -44,7 +44,17 @@ Edit the JSON in `ui/src/ds/tokens/tokens/` and regenerate:
 npm --prefix ui run tokens
 ```
 
-- `color.json`: primitive palettes. LogDoc adds **Ember** (brand orange, `#ff4e0e` at 500) and **Graphite** (its dark greys).
-- `semantic-tokens.json`: the themes. `logdoc` is LogDoc's; `default` is the original SigNoz theme, kept for comparison.
+## Colors
 
-The **Palette** button in the toolbar switches every story between the two.
+The palette is deliberately small; every color has one job.
+
+| Palette | Role |
+| --- | --- |
+| `primary` | LogDoc orange (`#ff4e0e` at 500): primary actions, focus, brand |
+| `dark` | Backgrounds: `1000` the page, `950` recessed wells |
+| `grey` | Surfaces, borders and text, from `900` (raised surface) to `50` (primary text) |
+| `yellow`, `orange`, `green`, `blue`, `red` | Status indicators only: warning, high, success, info, danger |
+
+Plus `base` white and black. Primitives live in `color.json`; components read
+them through the semantic tokens in `semantic-tokens.json` (the `logdoc`
+theme, dark only), never directly.

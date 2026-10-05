@@ -4,14 +4,15 @@
    Anything owned by a single screen lives in that screen's <Name>.css. */
 
 :root {
-  /* Log levels: v1's level hues, expressed through the ds primitives. */
-  --level-debug: var(--bg-graphite-300);
-  --level-info: var(--bg-robin-400);
-  --level-log: var(--bg-forest-400);
-  --level-warn: var(--bg-amber-500);
-  --level-error: var(--bg-ember-400);
-  --level-severe: var(--bg-cherry-500);
-  --level-panic: var(--bg-sakura-500);
+  /* Log levels map onto the status palettes: grey for noise, blue for
+     info, green for routine, yellow → orange → red as severity climbs. */
+  --level-debug: var(--bg-grey-300);
+  --level-info: var(--bg-blue-400);
+  --level-log: var(--bg-green-400);
+  --level-warn: var(--bg-yellow-500);
+  --level-error: var(--bg-orange-500);
+  --level-severe: var(--bg-red-500);
+  --level-panic: var(--bg-red-300);
 }
 
 /* Reserve the scrollbar's gutter so popups that lock body scroll don't

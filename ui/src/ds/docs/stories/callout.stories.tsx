@@ -54,7 +54,7 @@ const meta: Meta<typeof Callout> = {
 		},
 		color: {
 			control: 'select',
-			options: ['robin', 'forest', 'amber', 'cherry', 'sienna', 'aqua'],
+			options: ['primary', 'blue', 'green', 'yellow', 'orange', 'red', 'grey'],
 			description: 'Overrides the default color derived from `type`. Uses predefined color names.',
 			table: { category: 'Appearance' },
 		},
@@ -168,8 +168,8 @@ export const AllVariants: Story = {
 				<Callout type="warning" size="medium" icon={<Zap aria-hidden />} title="Zap Icon">
 					Custom zap icon with warning colors.
 				</Callout>
-				<Callout color="sienna" size="medium" icon={<Sun aria-hidden />} title="Sun Icon">
-					Custom sun icon with sienna colors.
+				<Callout color="orange" size="medium" icon={<Sun aria-hidden />} title="Sun Icon">
+					Custom sun icon with orange colors.
 				</Callout>
 			</div>
 
@@ -178,23 +178,26 @@ export const AllVariants: Story = {
 				<Typography size="lg" weight="semibold">
 					Custom Colors
 				</Typography>
-				<Callout color="robin" size="medium" title="Robin Color">
-					Using custom robin color.
+				<Callout color="primary" size="medium" title="Primary Color">
+					Using the primary palette.
 				</Callout>
-				<Callout color="forest" size="medium" title="Forest Color">
-					Using custom forest color.
+				<Callout color="blue" size="medium" title="Blue Color">
+					Using the blue palette.
 				</Callout>
-				<Callout color="amber" size="medium" title="Amber Color">
-					Using custom amber color.
+				<Callout color="green" size="medium" title="Green Color">
+					Using the green palette.
 				</Callout>
-				<Callout color="cherry" size="medium" title="Cherry Color">
-					Using custom cherry color.
+				<Callout color="yellow" size="medium" title="Yellow Color">
+					Using the yellow palette.
 				</Callout>
-				<Callout color="sienna" size="medium" title="Sienna Color">
-					Using custom sienna color.
+				<Callout color="orange" size="medium" title="Orange Color">
+					Using the orange palette.
 				</Callout>
-				<Callout color="aqua" size="medium" title="Aqua Color">
-					Using custom aqua color.
+				<Callout color="red" size="medium" title="Red Color">
+					Using the red palette.
+				</Callout>
+				<Callout color="grey" size="medium" title="Grey Color">
+					Using the grey palette.
 				</Callout>
 			</div>
 

@@ -38,9 +38,10 @@ interface ThemeMode {
 }
 
 interface SemanticTokens {
+	// A theme may ship one mode only (LogDoc is dark-only).
 	[themeName: string]: {
-		light: ThemeMode;
-		dark: ThemeMode;
+		light?: ThemeMode;
+		dark?: ThemeMode;
 	};
 }
 
@@ -106,27 +107,20 @@ function getSelector(themeName: string, mode: ThemeMode): string {
  */
 function generateThemeCSS(
 	themeName: string,
-	theme: { light: ThemeMode; dark: ThemeMode },
+	theme: { light?: ThemeMode; dark?: ThemeMode },
 ): string {
 	const timestamp = new Date().toUTCString();
 
-	// Light mode
-	const lightTokens = convertTokensToCSSFormat(theme.light.tokens);
-	const lightSelector = getSelector(themeName, theme.light);
-	const lightBlock = `${lightSelector} {
-	color-scheme: ${theme.light.meta['color-scheme']};
+	const blocks = [theme.light, theme.dark]
+		.filter((mode): mode is ThemeMode => mode !== undefined)
+		.map((mode) => {
+			const tokens = convertTokensToCSSFormat(mode.tokens);
+			return `${getSelector(themeName, mode)} {
+	color-scheme: ${mode.meta['color-scheme']};
 
-${generateTokenDeclarations(lightTokens)}
+${generateTokenDeclarations(tokens)}
 }`;
-
-	// Dark mode
-	const darkTokens = convertTokensToCSSFormat(theme.dark.tokens);
-	const darkSelector = getSelector(themeName, theme.dark);
-	const darkBlock = `${darkSelector} {
-	color-scheme: ${theme.dark.meta['color-scheme']};
-
-${generateTokenDeclarations(darkTokens)}
-}`;
+		});
 
 	// Determine file header info
 	const displayName =
@@ -140,9 +134,7 @@ ${generateTokenDeclarations(darkTokens)}
  * Generated on ${timestamp}
  */
 
-${lightBlock}
-
-${darkBlock}
+${blocks.join('\n\n')}
 `;
 }
 
@@ -230,24 +222,23 @@ async function generateSemanticTokens(): Promise<void> {
 		}
 
 		// 2. Generate TypeScript definitions (Style.ts and StyleTailwind.ts)
-		// Use 'default' theme tokens as source of truth for keys
-		const defaultTheme = tokensData['default'];
-		if (defaultTheme) {
+		// The first theme's first mode is the source of truth for keys.
+		const firstTheme = Object.values(tokensData)[0];
+		const sourceMode = firstTheme?.light ?? firstTheme?.dark;
+		if (sourceMode) {
 			// Generate Style.ts
-			const styleContent = generateStyleDefinitions(defaultTheme.light.tokens);
+			const styleContent = generateStyleDefinitions(sourceMode.tokens);
 			const stylePath = join(typesDir, 'Style.ts');
 			await fs.writeFile(stylePath, styleContent);
 			console.log(`✓ Generated types/Style.ts`);
 
 			// Generate StyleTailwind.ts
-			const styleTailwindContent = generateStyleTailwindDefinitions(
-				defaultTheme.light.tokens,
-			);
+			const styleTailwindContent = generateStyleTailwindDefinitions(sourceMode.tokens);
 			const styleTailwindPath = join(typesDir, 'StyleTailwind.ts');
 			await fs.writeFile(styleTailwindPath, styleTailwindContent);
 			console.log(`✓ Generated types/StyleTailwind.ts`);
 		} else {
-			console.warn('⚠️ No default theme found, skipping Style.ts generation');
+			console.warn('⚠️ No theme found, skipping Style.ts generation');
 		}
 
 		console.log(`\n✅ Semantic tokens generated successfully!`);

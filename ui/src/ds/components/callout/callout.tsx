@@ -11,7 +11,7 @@ import React, { forwardRef } from 'react';
 import { cn } from '../lib/utils.js';
 import styles from './callout.module.scss';
 
-export type CalloutColor = 'robin' | 'forest' | 'amber' | 'cherry' | 'sakura' | 'aqua';
+export type CalloutColor = 'primary' | 'blue' | 'green' | 'yellow' | 'orange' | 'red' | 'grey';
 
 export type CalloutProps = Pick<
 	React.ComponentProps<'div'>,
@@ -30,10 +30,10 @@ export type CalloutProps = Pick<
 };
 
 const typeToColorMap = {
-	info: 'robin',
-	success: 'forest',
-	warning: 'amber',
-	error: 'cherry',
+	info: 'blue',
+	success: 'green',
+	warning: 'yellow',
+	error: 'red',
 } as const;
 
 const defaultIcons = {
@@ -95,7 +95,7 @@ const defaultIcons = {
  * // Medium size with custom color
  * <Callout
  *   title="Custom callout"
- *   color="aqua"
+ *   color="blue"
  *   size="medium"
  * />
  * ```

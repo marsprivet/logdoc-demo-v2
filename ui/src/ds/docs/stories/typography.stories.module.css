@@ -7,7 +7,7 @@
 	font-size: 18px;
 	font-weight: bold;
 	line-height: 1.5;
-	color: var(--text-vanilla-100);
+	color: var(--text-grey-50);
 }
 
 .showcaseGrid {
@@ -17,7 +17,7 @@
 }
 
 .showcaseItem {
-	color: var(--text-vanilla-100);
+	color: var(--text-grey-50);
 
 	h2,
 	p {
@@ -50,7 +50,7 @@
 }
 
 .sizeLabel {
-	color: var(--text-vanilla-400);
+	color: var(--text-grey-100);
 	flex-shrink: 0;
 	width: 100px;
 	font-size: 12px;
@@ -58,7 +58,7 @@
 }
 
 .sizeLabelSmall {
-	color: var(--text-vanilla-400);
+	color: var(--text-grey-100);
 	flex-shrink: 0;
 	width: 48px;
 	font-size: 12px;
@@ -66,7 +66,7 @@
 }
 
 .weightLabel {
-	color: var(--text-vanilla-400);
+	color: var(--text-grey-100);
 	flex-shrink: 0;
 	width: 110px;
 	font-size: 12px;

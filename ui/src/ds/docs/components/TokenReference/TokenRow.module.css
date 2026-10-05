@@ -105,13 +105,13 @@
 }
 
 .detailLabelUse {
-	color: var(--accent-forest);
+	color: var(--accent-green);
 	font-weight: 500;
 	flex-shrink: 0;
 }
 
 .detailLabelAvoid {
-	color: var(--accent-cherry);
+	color: var(--accent-red);
 	font-weight: 500;
 	flex-shrink: 0;
 }

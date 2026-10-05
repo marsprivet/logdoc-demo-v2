@@ -6,33 +6,10 @@ import "../src/ds/docs/storybook/preview.css";
 import { LinkGuardDecorator } from "../src/ds/docs/storybook/linkGuard";
 import { ModeDecorator } from "../src/ds/docs/storybook/modeDecorator";
 
-// Theme and motion are globals (not parameters) so the toolbar drives them
-// for every story at once; ModeDecorator applies them to <html>/<body>.
+// Motion is a global (not a parameter) so the toolbar drives it for every
+// story at once; ModeDecorator applies it, and the LogDoc theme (dark,
+// data-theme="logdoc"), to <html>/<body>.
 export const globalTypes: Preview["globalTypes"] = {
-  theme: {
-    description: "Color scheme",
-    toolbar: {
-      title: "Theme",
-      icon: "paintbrush",
-      items: [
-        { value: "dark", title: "Dark" },
-        { value: "light", title: "Light" },
-      ],
-      dynamicTitle: true,
-    },
-  },
-  palette: {
-    description: "Token sheet the components read: LogDoc's theme or the original SigNoz one",
-    toolbar: {
-      title: "Palette",
-      icon: "paintbrushalt",
-      items: [
-        { value: "logdoc", title: "LogDoc" },
-        { value: "default", title: "SigNoz (original)" },
-      ],
-      dynamicTitle: true,
-    },
-  },
   motion: {
     description: "Park every animation on its last frame (Still) or watch transitions (Live).",
     toolbar: {

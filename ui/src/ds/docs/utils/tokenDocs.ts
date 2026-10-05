@@ -62,7 +62,7 @@ export function getTailwindClass(tokenName: string, category?: string): string {
 export function parseSemanticTokens(mode: ThemeMode = 'dark'): ParsedToken[] {
 	const themeTokens = (
 		semanticTokens as Record<string, Record<string, { tokens: Record<string, TokenValue> }>>
-	).default?.[mode]?.tokens;
+	).logdoc?.[mode]?.tokens;
 	if (!themeTokens) return [];
 
 	return Object.entries(themeTokens).map(([name, token]) => {

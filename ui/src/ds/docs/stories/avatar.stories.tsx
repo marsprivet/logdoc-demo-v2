@@ -35,14 +35,12 @@ const meta: Meta<typeof Avatar> = {
 				'success',
 				'error',
 				'warning',
-				'robin',
-				'forest',
-				'amber',
-				'sienna',
-				'cherry',
-				'sakura',
-				'aqua',
-				'vanilla',
+				'blue',
+				'green',
+				'yellow',
+				'orange',
+				'red',
+				'grey',
 			],
 			description: 'The color theme of the avatar background.',
 			table: { category: 'Appearance' },
@@ -89,7 +87,7 @@ export const Playground: Story = {
 		size: 'md',
 		shape: 'circle',
 		children: 'AB',
-		color: 'robin',
+		color: 'primary',
 		loading: false,
 	},
 };
@@ -108,7 +106,7 @@ export const AllSizes: Story = {
 			<div className={`story-row-lg ${styles.flexRowAlignEnd}`}>
 				{sizes.map((size) => (
 					<div key={size} className="story-column">
-						<Avatar size={size} color="robin">
+						<Avatar size={size} color="primary">
 							{size.toUpperCase()}
 						</Avatar>
 						<Typography size="xs" color="muted">
@@ -132,7 +130,7 @@ export const Shapes: Story = {
 	render: () => (
 		<div className="story-row-lg">
 			<div className="story-column">
-				<Avatar size="lg" shape="circle" color="robin">
+				<Avatar size="lg" shape="circle" color="primary">
 					AB
 				</Avatar>
 				<Typography size="xs" color="muted">
@@ -140,7 +138,7 @@ export const Shapes: Story = {
 				</Typography>
 			</div>
 			<div className="story-column">
-				<Avatar size="lg" shape="square" color="robin">
+				<Avatar size="lg" shape="square" color="primary">
 					AB
 				</Avatar>
 				<Typography size="xs" color="muted">
@@ -161,14 +159,12 @@ export const AllColors: Story = {
 	},
 	render: () => {
 		const colors: AvatarColor[] = [
-			'robin',
-			'forest',
-			'amber',
-			'sienna',
-			'cherry',
-			'sakura',
-			'aqua',
-			'vanilla',
+			'blue',
+			'green',
+			'yellow',
+			'orange',
+			'red',
+			'grey',
 		];
 		return (
 			<div className="story-grid-lg">
@@ -217,7 +213,7 @@ export const ImageFallback: Story = {
 	},
 	render: () => (
 		<div className="story-row-lg">
-			<Avatar size="lg" src="https://broken-url.invalid/avatar.png" color="cherry">
+			<Avatar size="lg" src="https://broken-url.invalid/avatar.png" color="red">
 				JD
 			</Avatar>
 			<Typography size="sm" color="muted">

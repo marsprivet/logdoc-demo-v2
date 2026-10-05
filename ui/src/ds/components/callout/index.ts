@@ -5,12 +5,12 @@
  *
  * | Token | Default |
  * |-------|---------|
- * | `--callout-aqua-background` | `-` |
- * | `--callout-aqua-border` | `-` |
- * | `--callout-aqua-description` | `-` |
- * | `--callout-aqua-icon` | `-` |
- * | `--callout-aqua-title` | `-` |
- * | `--callout-description-color` | `var(--callout-aqua-description)` |
+ * | `--callout-blue-background` | `-` |
+ * | `--callout-blue-border` | `-` |
+ * | `--callout-blue-description` | `-` |
+ * | `--callout-blue-icon` | `-` |
+ * | `--callout-blue-title` | `-` |
+ * | `--callout-description-color` | `var(--callout-blue-description)` |
  * | `--callout-description-font-weight` | `var(--font-weight-normal)` |
  * | `--callout-error-background` | `-` |
  * | `--callout-error-border` | `-` |
@@ -19,7 +19,7 @@
  * | `--callout-error-title` | `-` |
  * | `--callout-font-size-medium` | `var(--periscope-font-size-medium, 16px)` |
  * | `--callout-font-size-small` | `var(--periscope-font-size-base, 13px)` |
- * | `--callout-icon-color` | `var(--callout-aqua-icon)` |
+ * | `--callout-icon-color` | `var(--callout-blue-icon)` |
  * | `--callout-line-height-medium` | `1.5rem` |
  * | `--callout-line-height-small` | `1.25rem` |
  * | `--callout-padding` | `var(--spacing-8, 1rem)` |
@@ -28,17 +28,17 @@
  * | `--callout-primary-description` | `-` |
  * | `--callout-primary-icon` | `-` |
  * | `--callout-primary-title` | `-` |
- * | `--callout-sienna-background` | `-` |
- * | `--callout-sienna-border` | `-` |
- * | `--callout-sienna-description` | `-` |
- * | `--callout-sienna-icon` | `-` |
- * | `--callout-sienna-title` | `-` |
+ * | `--callout-grey-background` | `-` |
+ * | `--callout-grey-border` | `-` |
+ * | `--callout-grey-description` | `-` |
+ * | `--callout-grey-icon` | `-` |
+ * | `--callout-grey-title` | `-` |
  * | `--callout-success-background` | `-` |
  * | `--callout-success-border` | `-` |
  * | `--callout-success-description` | `-` |
  * | `--callout-success-icon` | `-` |
  * | `--callout-success-title` | `-` |
- * | `--callout-title-color` | `var(--callout-aqua-title)` |
+ * | `--callout-title-color` | `var(--callout-blue-title)` |
  * | `--callout-title-font-weight` | `var(--font-weight-medium)` |
  * | `--callout-title-letter-spacing` | `-0.01em` |
  * | `--callout-warning-background` | `-` |

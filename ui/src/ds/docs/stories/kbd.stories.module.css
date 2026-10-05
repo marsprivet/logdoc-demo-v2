@@ -18,7 +18,7 @@
 .headerMargin {
   display: block;
   margin-bottom: 0.75rem;
-  color: var(--text-vanilla-300);
+  color: var(--text-grey-100);
 }
 
 .shortcutRow {

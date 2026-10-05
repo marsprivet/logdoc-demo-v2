@@ -182,7 +182,6 @@ export const PrimitiveColors: Story = {
 			mode="primitive"
 			showModeTabs={false}
 			showCategoryFilter={false}
-			showThemeToggle={false}
 			title="Primitive Colors"
 			description="Raw color palette used as building blocks for semantic tokens"
 		/>
