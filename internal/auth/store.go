@@ -168,7 +168,7 @@ func (s *Store) listUsers() ([]User, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []User{}
 	for rows.Next() {
 		var u User
@@ -209,7 +209,7 @@ func (s *Store) listTokens(login string) ([]Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []Token{}
 	for rows.Next() {
 		var t Token

@@ -145,7 +145,7 @@ func TestSessionExpiry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	svc, err := NewService(store, "", time.Millisecond)
 	if err != nil {
 		t.Fatal(err)

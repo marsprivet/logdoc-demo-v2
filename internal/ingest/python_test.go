@@ -141,7 +141,7 @@ func TestPythonServerTCP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Two framed records back to back, like SocketHandler on a live socket.
 	payload := append(frame(mustHex(t, pickleProto1)), frame(mustHex(t, pickleProto2))...)
@@ -170,7 +170,7 @@ func TestPythonServerUDP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// DatagramHandler sends the same length-prefixed payload per datagram.
 	if _, err := conn.Write(frame(mustHex(t, pickleProto2))); err != nil {

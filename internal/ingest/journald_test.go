@@ -159,7 +159,7 @@ func TestJournaldServerUDP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	data := journalExport([][2]string{
 		{"MESSAGE", "over the wire"},
