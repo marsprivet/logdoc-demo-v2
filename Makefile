@@ -2,7 +2,7 @@ BINARY  := logdoc
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS := -X main.version=$(VERSION)
 
-.PHONY: build run test lint vet up down clean ui plugins proto
+.PHONY: build run test lint vet up down clean ui plugins proto demo
 
 ui:
 	cd ui && npm install && npm run build
@@ -27,6 +27,14 @@ up:
 
 down:
 	docker compose -f deploy/docker-compose.dev.yml down
+
+# Demo data: the declared ~40-service shop, checkout traffic and a database
+# incident. With auth on: make demo LOGDOC_API_KEY=ldt_...
+DEMO_HOST ?= localhost:9001
+demo:
+	python3 deploy/demo-declared.py http://$(DEMO_HOST) "$(LOGDOC_API_KEY)"
+	LOGDOC_API_KEY="$(LOGDOC_API_KEY)" sh deploy/demo-traffic.sh $(DEMO_HOST) 60
+	LOGDOC_API_KEY="$(LOGDOC_API_KEY)" sh deploy/demo-incident.sh $(DEMO_HOST)
 
 # Reference plugins (Plugin SDK v2), built as standalone binaries.
 plugins:

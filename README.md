@@ -3,7 +3,7 @@
 Structured-log-first platform: a single Go binary on top of ClickHouse.
 Pipeline: **gather → pipe → sink → view → understand**.
 
-![Live architecture map built from logs](docs/img/topology.png)
+![Live architecture map built from logs](docs/img/before-after/topology-after.png)
 
 What makes it different:
 
@@ -23,6 +23,16 @@ docker compose -f deploy/docker-compose.yml up -d --build
 ```
 
 UI: http://localhost:9001 · Health: `GET /healthz`
+
+Demo data — a ~40-service shop on the map, live checkout traffic and a
+database incident cascading through billing, api and web:
+
+```bash
+make demo
+```
+
+With auth on, pass a key: `make demo LOGDOC_API_KEY=ldt_...`; another
+instance: `make demo DEMO_HOST=localhost:9101`.
 
 First log:
 
@@ -80,8 +90,6 @@ required — traces only refine the map.
   **Board** (swimlane columns of service chips), **All nodes**, and
   **Focus** (the ego-graph of one service).
 
-![Business domains laid out as a pipeline](docs/img/topology-domains.png)
-
 - Impact analysis: every service card has an **Impact** tab — the downtime
   blast radius, computed from the graph with transport semantics. Sync
   callers (http/grpc/sql) fail immediately and the failure walks up the
@@ -90,13 +98,10 @@ required — traces only refine the map.
   blue is what the service itself needs. Works for infrastructure too —
   click a database and see exactly who dies with it.
 
-![Downtime blast radius of a payment gateway](docs/img/topology-impact.png)
-
 - Edge cards: click a link and get the human story — what flows here and
   why (composed from transport semantics plus the declared evidence), the
   origin (`declared` / `observed` / both), and windowed traffic.
 
-![An edge card: what flows over this link and why](docs/img/topology-edge.png)
 - API: `GET /api/v1/topology?window=5m` — nodes and edges with windowed
   rates (rps, error rate).
 - Export: `GET /api/v1/topology/export?format=mermaid|markdown` — paste the
@@ -129,7 +134,6 @@ required — traces only refine the map.
   ones degrade, and failure cascades up synchronous call chains — the
   "what if this DC dies" answer in one screenshot.
 
-![Simulating a datacenter outage: dead, cascading and degraded services](docs/img/topology-outage.png)
 - Project files: the whole mapped system (declared graph + catalog +
   title) exports as one portable JSON (`GET/POST /api/v1/topology/project`)
   — keep several projects as files and switch between them.
@@ -157,9 +161,7 @@ map, follows the error edges and reads the logs itself. Try it on the demo
 incident: `deploy/demo-incident.sh` injects a database failure cascading
 through three services.
 
-![An agent root-causing the demo incident through MCP, unattended](docs/img/agent-demo.gif)
-
-Above (2× speed): a single prompt, no human input — the agent walks the
+With a single prompt and no human input, the agent walks the
 topology, follows one `trace_id` across four services and lands on the root
 cause: a bad `billing` deploy exhausting the postgres connection pool.
 
